@@ -5,7 +5,7 @@ import { ArrowLeft, RefreshCw, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "@/layout.js";
+import { useLanguage } from "@/layout";
 import EquipmentSummaryTable from "../components/management-view/EquipmentSummaryTable";
 import ControlTableFilters from "../components/management-view/ControlTableFilters";
 
