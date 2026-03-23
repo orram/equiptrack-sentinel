@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Equipment, Soldier, Assignment, InventoryItem } from "@/entities/all";
 import { EmailService } from "../components/utils/EmailService";
@@ -19,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "../layout.js";
 
 export default function ReturnTool() {
   const navigate = useNavigate();
