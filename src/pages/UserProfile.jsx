@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { User, Soldier, Equipment, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User as UserIcon, Mail, Shield, Package, Edit, Save, X, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "@/layout.js";
 
 export default function UserProfile() {
   const navigate = useNavigate();
