@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Equipment, AmralControlItem, Soldier } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { ArrowLeft, RefreshCw, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "../layout.js";
 import EquipmentSummaryTable from "../components/management-view/EquipmentSummaryTable";
 import ControlTableFilters from "../components/management-view/ControlTableFilters";
 
