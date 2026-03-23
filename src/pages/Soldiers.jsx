@@ -14,7 +14,7 @@ import SoldierList from "../components/soldiers/SoldierList";
 import SoldierDetail from "../components/soldiers/SoldierDetail";
 import AddSoldierModal from "../components/soldiers/AddSoldierModal";
 import EditSoldierForm from "../components/soldiers/EditSoldierForm";
-import { useLanguage } from "../layout";
+import { useLanguage } from "../layout.js";
 
 export default function Soldiers() {
   const { t } = useLanguage();
