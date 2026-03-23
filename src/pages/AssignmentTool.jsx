@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Equipment, Soldier, Assignment, InventoryItem } from "@/entities/all";
 import { EmailService } from "@/components/utils/EmailService";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Search, ArrowLeft, Package, UserCog } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "../layout.js";
 
 import SoldierSearch from "@/components/assignment-tool/SoldierSearch";
 import EquipmentManager from "@/components/assignment-tool/EquipmentManager";
