@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -44,19 +43,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Language context
-const LanguageContext = React.createContext();
-
-export const useLanguage = () => {
-  const context = React.useContext(LanguageContext);
-  if (!context) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-};
+import { useLanguage, translations, LanguageContext } from "@/lib/language";
 
 // Translations
-const translations = {
+const _translations = {
   en: {
     // Navigation
     dashboard: "Dashboard",

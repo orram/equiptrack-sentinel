@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, Edit, Trash2, Search, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "@/lib/language";
 
 import AddSupplantingItemModal from "../components/supplanting/AddSupplantingItemModal";
 import EditSupplantingItemModal from "../components/supplanting/EditSupplantingItemModal";

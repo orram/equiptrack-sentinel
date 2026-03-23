@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "@/lib/language";
 
 export default function ReturnTool() {
   const navigate = useNavigate();

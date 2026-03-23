@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User as UserIcon, Mail, Shield, Package, Edit, Save, X, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useLanguage } from "../layout";
+import { useLanguage } from "@/lib/language";
 
 export default function UserProfile() {
   const navigate = useNavigate();
