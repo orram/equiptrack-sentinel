@@ -45,10 +45,7 @@ import {
 
 import { useLanguage, translations, LanguageContext } from "@/lib/language";
 
-const _unused = {
-  en: {
-    // Navigation
-    dashboard: "Dashboard",
+
     equipment: "Equipment",
     soldiers: "Soldiers",
     assignmentTool: "Assignment Tool",
