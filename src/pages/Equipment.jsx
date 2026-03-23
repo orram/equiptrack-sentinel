@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Equipment, Soldier, OldEquipment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +19,7 @@ import EquipmentFilters from "../components/equipment/EquipmentFilters";
 import EquipmentDetail from "../components/equipment/EquipmentDetail";
 import AssignmentModal from "../components/equipment/AssignmentModal";
 import AddEquipmentModal from "../components/equipment/AddEquipmentModal";
-import { useLanguage } from "../layout";
+import { useLanguage } from "../layout.js";
 
 export default function EquipmentPage() {
   const { t } = useLanguage();
