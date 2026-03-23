@@ -8,7 +8,7 @@ import InventoryList from "../components/inventory/InventoryList";
 import AddInventoryItemModal from "../components/inventory/AddInventoryItemModal";
 import AdjustQuantityModal from "../components/inventory/AdjustQuantityModal";
 import InventoryDetail from "../components/inventory/InventoryDetail";
-import { useLanguage } from "@/layout";
+import { useLanguage } from "../layout";
 
 export default function InventoryPage() {
   const { t } = useLanguage();
