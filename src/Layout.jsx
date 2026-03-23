@@ -45,8 +45,7 @@ import {
 
 import { useLanguage, translations, LanguageContext } from "@/lib/language";
 
-// Translations
-const _translations = {
+const _unused = {
   en: {
     // Navigation
     dashboard: "Dashboard",
