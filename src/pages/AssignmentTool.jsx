@@ -32,15 +32,12 @@ export default function AssignmentTool() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Fetch data sequentially to avoid rate limiting
-      const soldierData = await Soldier.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      const equipmentData = await Equipment.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      const inventoryData = await InventoryItem.list();
-      await new Promise(resolve => setTimeout(resolve, 200));
-      const assignmentData = await Assignment.list();
-      
+      const [soldierData, equipmentData, inventoryData, assignmentData] = await Promise.all([
+        Soldier.list(),
+        Equipment.list(),
+        InventoryItem.list(),
+        Assignment.list(),
+      ]);
       setSoldiers(soldierData);
       setEquipment(equipmentData);
       setInventoryItems(inventoryData);
