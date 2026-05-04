@@ -177,7 +177,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 {platoon}
               </TableHead>
             ))}
-            <TableHead colSpan={subHeaders.length} className="text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400">
+            <TableHead colSpan={subHeaders.length} className="text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400 sticky left-0 z-10">
               סה״כ כללי
             </TableHead>
           </TableRow>
@@ -194,8 +194,8 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 </TableHead>
               ))
             )}
-            {subHeaders.map(sub => (
-              <TableHead key={`grand-total-${sub}`} className="text-center text-xs font-semibold text-slate-300 bg-slate-800 border-r">
+            {subHeaders.map((sub, index) => (
+              <TableHead key={`grand-total-${sub}`} className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l sticky left-0 z-10 ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                 {sub}
               </TableHead>
             ))}
@@ -224,7 +224,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 </React.Fragment>
               ))}
               {subHeaders.map((sub, index) => (
-                <TableCell key={`${type}-grand-total-${sub}`} className="text-center font-semibold bg-slate-100 border-r">
+                <TableCell key={`${type}-grand-total-${sub}`} className={`text-center font-semibold bg-slate-100 border-l sticky left-0 z-10 ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                   {tableData[type]?.grandTotal?.[
                     ['total', 'issued', 'storage', 'repair'][index]
                   ] || 0}
@@ -253,7 +253,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               </React.Fragment>
             ))}
             {subHeaders.map((sub, index) => (
-              <TableCell key={`total-grand-total-${sub}`} className="text-center bg-slate-900 text-white border-r">
+              <TableCell key={`total-grand-total-${sub}`} className={`text-center bg-slate-900 text-white border-l sticky left-0 z-10 ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                 {grandTotal?.[
                   ['total', 'issued', 'storage', 'repair'][index]
                 ] || 0}
