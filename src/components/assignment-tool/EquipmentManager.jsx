@@ -14,7 +14,8 @@ import {
   Search,
   X,
   Layers,
-  AlertTriangle
+  AlertTriangle,
+  PackagePlus
 } from "lucide-react";
 
 import DigitalSignature from "@/components/assignment-tool/DigitalSignature";
@@ -26,6 +27,10 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   const [showSignature, setShowSignature] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [supplantingSearchTerm, setSupplantingSearchTerm] = useState("");
+  const [showAddBySerial, setShowAddBySerial] = useState(false);
+  const [newSerialNumber, setNewSerialNumber] = useState("");
+  const [newObjectName, setNewObjectName] = useState("");
+  const [isAddingNew, setIsAddingNew] = useState(false);
   const [pendingAssignments, setPendingAssignments] = useState([]);
   const [allAssignments, setAllAssignments] = useState([]);
   const [allSoldiers, setAllSoldiers] = useState([]);
@@ -377,6 +382,46 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     setIsProcessing(false);
   };
 
+  const handleAddNewEquipment = async () => {
+    if (!newSerialNumber.trim() || !newObjectName.trim()) {
+      alert("Please enter both a serial number and equipment name.");
+      return;
+    }
+    const exists = equipment.find(e => e.serial_number === newSerialNumber.trim());
+    if (exists) {
+      alert("Equipment with this serial number already exists.");
+      return;
+    }
+    setIsAddingNew(true);
+    try {
+      const newItem = await Equipment.create({
+        serial_number: newSerialNumber.trim(),
+        object_name: newObjectName.trim(),
+        assignment_status: "storage",
+        platoon: soldier.platoon || "",
+        squad: soldier.squad || "",
+      });
+      setNewSerialNumber("");
+      setNewObjectName("");
+      setShowAddBySerial(false);
+      onUpdate();
+      // Add to pending after creation
+      const availableSupplanting = supplantingItems.filter(item => item.equipment_name === newObjectName.trim());
+      setPendingAssignments(prev => [...prev, {
+        ...newItem,
+        serial_number: newSerialNumber.trim(),
+        object_name: newObjectName.trim(),
+        assignment_type: 'serialized',
+        assignment_status: 'storage',
+        availableSupplantingItems: availableSupplanting
+      }]);
+    } catch (error) {
+      console.error("Error creating equipment:", error);
+      alert("Error creating equipment. Please try again.");
+    }
+    setIsAddingNew(false);
+  };
+
   const handleBack = () => {
     if (pendingAssignments.length > 0) {
       const count = pendingAssignments.length;
@@ -693,6 +738,45 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                     </div>
                   )}
               </div>
+            </div>
+
+            {/* Add Missing Equipment by Serial */}
+            <div className="mt-4 border-t pt-4">
+              {!showAddBySerial ? (
+                <Button variant="outline" className="w-full" onClick={() => setShowAddBySerial(true)}>
+                  <PackagePlus className="w-4 h-4 mr-2" />
+                  Add Missing Equipment by Serial Number
+                </Button>
+              ) : (
+                <div className="space-y-3 p-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                    <PackagePlus className="w-4 h-4" />
+                    Add New Equipment
+                  </h4>
+                  <Input
+                    placeholder="Serial Number *"
+                    value={newSerialNumber}
+                    onChange={(e) => setNewSerialNumber(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Equipment Name (e.g. רובה M16) *"
+                    value={newObjectName}
+                    onChange={(e) => setNewObjectName(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleAddNewEquipment}
+                      disabled={isAddingNew || !newSerialNumber.trim() || !newObjectName.trim()}
+                      className="flex-1"
+                    >
+                      {isAddingNew ? "Adding..." : "Add & Issue"}
+                    </Button>
+                    <Button variant="outline" onClick={() => { setShowAddBySerial(false); setNewSerialNumber(""); setNewObjectName(""); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
