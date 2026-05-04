@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Equipment, Soldier, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,17 +32,11 @@ export default function Dashboard() {
     setError(null);
     
     try {
-      console.log("Loading equipment data...");
-      const equipmentData = await Equipment.list("-created_date");
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Loading soldier data...");
-      const soldierData = await Soldier.list("-created_date");
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Loading assignment data...");
-      const assignmentData = await Assignment.list("-created_date", 20);
-      
+      const [equipmentData, soldierData, assignmentData] = await Promise.all([
+        Equipment.list("-created_date"),
+        Soldier.list("-created_date"),
+        Assignment.list("-created_date", 20),
+      ]);
       setEquipment(equipmentData);
       setSoldiers(soldierData);
       setAssignments(assignmentData);

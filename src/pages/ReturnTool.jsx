@@ -42,18 +42,12 @@ export default function ReturnTool() {
     
     setIsLoading(true);
     try {
-      console.log("Loading return tool data...");
-      const equipmentData = await Equipment.list();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const inventoryData = await InventoryItem.list();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const soldierData = await Soldier.list();
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const assignmentData = await Assignment.filter({ status: "active" });
-
+      const [equipmentData, inventoryData, soldierData, assignmentData] = await Promise.all([
+        Equipment.list(),
+        InventoryItem.list(),
+        Soldier.list(),
+        Assignment.filter({ status: "active" }),
+      ]);
       setEquipment(equipmentData);
       setInventoryItems(inventoryData);
       setSoldiers(soldierData);
