@@ -33,6 +33,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  SidebarInset,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -103,9 +104,9 @@ export default function Layout({ children }) {
 
   return (
     <LanguageContext.Provider value={{ language, toggleLanguage, t, isRTL }}>
-      <div className={`min-h-screen flex w-full bg-slate-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <SidebarProvider>
-          <Sidebar className={`border-slate-200 bg-white w-72 ${isRTL ? 'border-l' : 'border-r'}`}>
+      <SidebarProvider>
+      <div className={`flex min-h-screen w-full bg-slate-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+          <Sidebar className={`border-slate-200 bg-white ${isRTL ? 'border-l' : 'border-r'}`}>
             <SidebarHeader className="border-b border-slate-200 p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3">
@@ -246,7 +247,7 @@ export default function Layout({ children }) {
             </SidebarFooter>
           </Sidebar>
 
-          <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <SidebarInset className="flex flex-col min-w-0">
             <header className="bg-white border-b border-slate-200 px-4 py-3 md:hidden">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
@@ -257,9 +258,10 @@ export default function Layout({ children }) {
             <div className="flex-1 overflow-auto">
               {children}
             </div>
-          </main>
-        </SidebarProvider>
+          </SidebarInset>
       </div>
+      </SidebarProvider>
     </LanguageContext.Provider>
+
   );
 }
