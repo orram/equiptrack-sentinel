@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -187,8 +186,8 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               subHeaders.map((sub, index) => (
                 <TableHead
                   key={`${platoon}-${sub}`}
-                  className={`text-center text-xs font-medium border-r ${
-                    index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-slate-200'
+                  className={`text-center text-xs font-medium ${
+                    index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                   }`}
                 >
                   {sub}
@@ -213,8 +212,8 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                   {subHeaders.map((sub, index) => (
                     <TableCell
                       key={`${type}-${platoon}-${sub}`}
-                      className={`text-center border-r ${
-                        index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-slate-200'
+                      className={`text-center ${
+                        index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                       }`}
                     >
                       {tableData[type]?.byPlatoon[platoon]?.[
@@ -242,8 +241,8 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 {subHeaders.map((sub, index) => (
                   <TableCell
                     key={`total-${platoon}-${sub}`}
-                    className={`text-center font-bold border-r ${
-                      index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-slate-200'
+                    className={`text-center font-bold ${
+                      index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                     }`}
                   >
                     {totalsByPlatoon[platoon]?.[
