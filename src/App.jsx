@@ -1,10 +1,11 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Outlet } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import Layout from './layout.jsx';
 import Dashboard from './pages/Dashboard';
 import Equipment from './pages/Equipment';
 import Soldiers from './pages/Soldiers';
@@ -49,24 +50,26 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/Dashboard" element={<Dashboard />} />
-      <Route path="/Equipment" element={<Equipment />} />
-      <Route path="/Soldiers" element={<Soldiers />} />
-      <Route path="/DataHealth" element={<DataHealth />} />
-      <Route path="/AssignmentTool" element={<AssignmentTool />} />
-      <Route path="/DocumentGenerator" element={<DocumentGenerator />} />
-      <Route path="/ReturnTool" element={<ReturnTool />} />
-      <Route path="/WeaponControlTable" element={<WeaponControlTable />} />
-      <Route path="/EquipmentControlTable" element={<EquipmentControlTable />} />
-      <Route path="/AmralControlTable" element={<AmralControlTable />} />
-      <Route path="/StaffIssueTool" element={<StaffIssueTool />} />
-      <Route path="/BulkRepairTool" element={<BulkRepairTool />} />
-      <Route path="/Settings" element={<Settings />} />
-      <Route path="/Inventory" element={<Inventory />} />
-      <Route path="/UserProfile" element={<UserProfile />} />
-      <Route path="/SupplantingItems" element={<SupplantingItems />} />
-      {/* Add your page Route elements here */}
+      <Route element={<Layout><Outlet /></Layout>}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/Dashboard" element={<Dashboard />} />
+        <Route path="/Equipment" element={<Equipment />} />
+        <Route path="/Soldiers" element={<Soldiers />} />
+        <Route path="/DataHealth" element={<DataHealth />} />
+        <Route path="/AssignmentTool" element={<AssignmentTool />} />
+        <Route path="/DocumentGenerator" element={<DocumentGenerator />} />
+        <Route path="/ReturnTool" element={<ReturnTool />} />
+        <Route path="/WeaponControlTable" element={<WeaponControlTable />} />
+        <Route path="/EquipmentControlTable" element={<EquipmentControlTable />} />
+        <Route path="/AmralControlTable" element={<AmralControlTable />} />
+        <Route path="/StaffIssueTool" element={<StaffIssueTool />} />
+        <Route path="/BulkRepairTool" element={<BulkRepairTool />} />
+        <Route path="/Settings" element={<Settings />} />
+        <Route path="/Inventory" element={<Inventory />} />
+        <Route path="/UserProfile" element={<UserProfile />} />
+        <Route path="/SupplantingItems" element={<SupplantingItems />} />
+        {/* Add your page Route elements here */}
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
