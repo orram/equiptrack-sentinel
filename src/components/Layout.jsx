@@ -106,7 +106,7 @@ export default function Layout({ children }) {
     <LanguageContext.Provider value={{ language, toggleLanguage, t, isRTL }}>
       <div className={`flex min-h-screen w-full bg-slate-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <SidebarProvider>
-          <Sidebar className={`border-slate-200 bg-white ${isRTL ? 'border-l' : 'border-r'}`}>
+          <Sidebar side={isRTL ? 'right' : 'left'} className={`border-slate-200 bg-white ${isRTL ? 'border-l' : 'border-r'}`}>
             <SidebarHeader className="border-b border-slate-200 p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 md:gap-3">
