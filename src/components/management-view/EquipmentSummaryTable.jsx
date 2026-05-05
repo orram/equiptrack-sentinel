@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 
 export default function EquipmentSummaryTable({ data, isLoading, onViewModeChange }) {
   const [showBySquad, setShowBySquad] = useState(false);
-  const subHeaders = ["סה\"כ", "הוצא", "במחסן", "תיקון"];
+  const subHeaders = ["תיקון", "במחסן", "הוצא", "סה\"כ"];
+  const dataKeys = ['repair', 'storage', 'issued', 'total'];
 
   const handleToggleChange = (checked) => {
     setShowBySquad(checked);
@@ -86,14 +87,14 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       <React.Fragment key={`${type}-${squad}`}>
                         {subHeaders.map((sub, index) => (
                           <TableCell key={`${type}-${squad}-${sub}`} className={`text-center border-r ${index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-slate-200'}`}>
-                            {tableData[type]?.bySquad[squad]?.[['total', 'issued', 'storage', 'repair'][index]] || 0}
+                            {tableData[type]?.bySquad[squad]?.[dataKeys[index]] || 0}
                           </TableCell>
                         ))}
                       </React.Fragment>
                     ))}
                     {subHeaders.map((sub, index) => (
                       <TableCell key={`${type}-platoon-total-${sub}`} className="text-center font-semibold bg-slate-100 border-r">
-                        {tableData[type]?.platoonTotal?.[['total', 'issued', 'storage', 'repair'][index]] || 0}
+                        {tableData[type]?.platoonTotal?.[dataKeys[index]] || 0}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -106,14 +107,14 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                     <React.Fragment key={`total-${squad}`}>
                       {subHeaders.map((sub, index) => (
                         <TableCell key={`total-${squad}-${sub}`} className={`text-center font-bold border-r ${index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-slate-200'}`}>
-                          {totalsBySquad[squad]?.[['total', 'issued', 'storage', 'repair'][index]] || 0}
+                          {totalsBySquad[squad]?.[dataKeys[index]] || 0}
                         </TableCell>
                       ))}
                     </React.Fragment>
                   ))}
                   {subHeaders.map((sub, index) => (
                     <TableCell key={`total-platoon-total-${sub}`} className="text-center bg-slate-900 text-white border-r">
-                      {platoonTotal?.[['total', 'issued', 'storage', 'repair'][index]] || 0}
+                      {platoonTotal?.[dataKeys[index]] || 0}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -216,18 +217,14 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                         index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                       }`}
                     >
-                      {tableData[type]?.byPlatoon[platoon]?.[
-                        ['total', 'issued', 'storage', 'repair'][index]
-                      ] || 0}
+                      {tableData[type]?.byPlatoon[platoon]?.[dataKeys[index]] || 0}
                     </TableCell>
                   ))}
                 </React.Fragment>
               ))}
               {subHeaders.map((sub, index) => (
                 <TableCell key={`${type}-grand-total-${sub}`} className={`text-center font-semibold bg-slate-100 border-l sticky left-0 z-10 ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
-                  {tableData[type]?.grandTotal?.[
-                    ['total', 'issued', 'storage', 'repair'][index]
-                  ] || 0}
+                  {tableData[type]?.grandTotal?.[dataKeys[index]] || 0}
                 </TableCell>
               ))}
             </TableRow>
@@ -245,18 +242,14 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                     }`}
                   >
-                    {totalsByPlatoon[platoon]?.[
-                      ['total', 'issued', 'storage', 'repair'][index]
-                    ] || 0}
+                    {totalsByPlatoon[platoon]?.[dataKeys[index]] || 0}
                   </TableCell>
                 ))}
               </React.Fragment>
             ))}
             {subHeaders.map((sub, index) => (
               <TableCell key={`total-grand-total-${sub}`} className={`text-center bg-slate-900 text-white border-l sticky left-0 z-10 ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
-                {grandTotal?.[
-                  ['total', 'issued', 'storage', 'repair'][index]
-                ] || 0}
+                {grandTotal?.[dataKeys[index]] || 0}
               </TableCell>
             ))}
           </TableRow>
