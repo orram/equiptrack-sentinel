@@ -333,12 +333,15 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   const handleSignatureComplete = async (itemsToAssign, signatureData) => {
     setIsProcessing(true);
     try {
+      // Reload active assignments to get latest data before checking for duplicates
+      const freshAssignments = await Assignment.filter({ status: "active" });
+      
       for (const item of itemsToAssign) {
         const equipmentId = item.assignment_type === 'inventory' ? item.object_name : item.serial_number;
         const todayDate = new Date().toISOString().split('T')[0];
 
         // Check for duplicate assignment created on the same day for same equipment/soldier
-        const existingDuplicate = allAssignments.find(a =>
+        const existingDuplicate = freshAssignments.find(a =>
           a.equipment_id === equipmentId &&
           a.soldier_id === soldier.soldier_id &&
           a.assignment_date === todayDate &&
