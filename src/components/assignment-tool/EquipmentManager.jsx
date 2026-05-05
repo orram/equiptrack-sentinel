@@ -70,7 +70,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     }
   };
 
-  const activeAssignments = useMemo(() => assignments.filter(a => a?.status === 'active'), [assignments]);
+  const activeAssignments = useMemo(() => assignments.filter(a => a?.status === 'active' && a?.soldier_id === soldier?.soldier_id), [assignments, soldier]);
 
   const issuedToSoldier = useMemo(() => {
     const activeEquipmentIds = new Set(activeAssignments.filter(a => !a.assignment_type || a.assignment_type === 'serialized').map(a => a.equipment_id));
