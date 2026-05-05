@@ -2,9 +2,9 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone, MapPin, Edit, Package, Layers } from "lucide-react";
+import { User, Mail, Phone, MapPin, Edit, Package, Layers, Trash2 } from "lucide-react";
 
-export default function SoldierDetail({ soldier, assignments = [], equipment = [], inventoryItems = [], onEdit, t }) {
+export default function SoldierDetail({ soldier, assignments = [], equipment = [], inventoryItems = [], onEdit, onDelete, t }) {
   if (!soldier) {
     return (
       <Card>
@@ -37,12 +37,19 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
             </CardTitle>
             <CardDescription>{t?.soldierId || "Soldier ID"}: {soldier.soldier_id || "N/A"}</CardDescription>
           </div>
-          {onEdit && (
-            <Button variant="outline" size="sm" onClick={() => onEdit(soldier)}>
-              <Edit className="w-3 h-3 mr-2" />
-              {t?.editProfile || "Edit Profile"}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={() => onEdit(soldier)}>
+                <Edit className="w-3 h-3 mr-2" />
+                {t?.editProfile || "Edit Profile"}
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => onDelete(soldier)}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>

@@ -150,7 +150,13 @@ export default function Soldiers() {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Optionally keep selectedSoldier to allow viewing details after cancelling edit
+  };
+
+  const handleDeleteSoldier = async (soldier) => {
+    if (!confirm(`Are you sure you want to delete ${soldier.full_name}? This cannot be undone.`)) return;
+    await Soldier.delete(soldier.id);
+    setSelectedSoldier(null);
+    loadData();
   };
   
   const selectedSoldierAssignments = selectedSoldier
@@ -234,6 +240,7 @@ export default function Soldiers() {
                   equipment={equipment}
                   inventoryItems={inventoryItems}
                   onEdit={handleEditSoldier}
+                  onDelete={handleDeleteSoldier}
                   t={t}
                 />
               </div>
