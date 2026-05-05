@@ -19,6 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/lib/language";
+import SupplantingItemsCheckDialog from "../components/return-tool/SupplantingItemsCheckDialog";
 
 export default function ReturnTool() {
   const navigate = useNavigate();
@@ -36,6 +37,8 @@ export default function ReturnTool() {
     soldier: "all",
     condition: "all"
   });
+  const [supplantingCheckOpen, setSupplantingCheckOpen] = useState(false);
+  const [pendingReturnItems, setPendingReturnItems] = useState([]);
 
   const loadData = useCallback(async (retryCount = 0) => {
     const MAX_RETRIES = 2;
@@ -137,6 +140,22 @@ export default function ReturnTool() {
       return;
     }
 
+    // Check if any items have supplanting items
+    const itemsWithSupplanting = allIssuedItems.filter(item => 
+      selectedItems.includes(item.assignment.id) && 
+      item.assignment?.signature_data?.supplanting_items?.length > 0
+    );
+
+    if (itemsWithSupplanting.length > 0) {
+      setPendingReturnItems(selectedItems);
+      setSupplantingCheckOpen(true);
+      return;
+    }
+
+    await processReturn();
+  };
+
+  const processReturn = async () => {
     setIsProcessing(true);
     
     try {
@@ -205,6 +224,7 @@ export default function ReturnTool() {
 
       alert(t.successfullyReturnedNItems(selectedItems.length));
       setSelectedItems([]);
+      setPendingReturnItems([]);
       loadData();
       
     } catch (error) {
@@ -437,6 +457,27 @@ export default function ReturnTool() {
             {t.searchEquipmentBySN || "Search Equipment by Serial Number"}
           </Button>
         </div>
+
+        {/* Supplanting Items Check Dialog */}
+        {pendingReturnItems.length > 0 && (
+          <SupplantingItemsCheckDialog
+            isOpen={supplantingCheckOpen}
+            supplantingItems={Array.from(new Set(
+              allIssuedItems
+                .filter(item => pendingReturnItems.includes(item.assignment.id))
+                .flatMap(item => item.assignment?.signature_data?.supplanting_items || [])
+            ))}
+            onConfirm={() => {
+              setSupplantingCheckOpen(false);
+              processReturn();
+            }}
+            onCancel={() => {
+              setSupplantingCheckOpen(false);
+              setPendingReturnItems([]);
+            }}
+            t={t}
+          />
+        )}
       </div>
     </div>
   );

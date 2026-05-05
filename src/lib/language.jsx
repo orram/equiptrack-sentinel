@@ -230,6 +230,11 @@ export const translations = {
     searchSoldierNameOrId: "Soldier name / ID",
     soldierNotFound: "Soldier not found?",
     searchEquipmentBySN: "Search Equipment by Serial Number",
+    returnSupplantingItemsTitle: "Verify Supplementary Items",
+    returnSupplantingItemsDescription: "This equipment has supplementary items that must be returned together.",
+    supplantingItemsIncluded: "Supplementary Items:",
+    confirmAllSupplantingReturned: "I confirm that all supplementary items have been returned",
+    proceedReturn: "Proceed with Return",
   },
   he: {
     dashboard: "לוח בקרה",
@@ -451,6 +456,11 @@ export const translations = {
     searchSoldierNameOrId: "שם חייל / מ.א",
     soldierNotFound: "חייל לא נמצא?",
     searchEquipmentBySN: "חפש ציוד לפי מספר סידורי",
+    returnSupplantingItemsTitle: "בדוק פריטים נלווים",
+    returnSupplantingItemsDescription: "לציוד זה יש פריטים נלווים שחייבים להיות מוחזרים ביחד.",
+    supplantingItemsIncluded: "פריטים נלווים:",
+    confirmAllSupplantingReturned: "אני מאשר שכל הפריטים הנלווים הוחזרו",
+    proceedReturn: "המשך עם ההחזרה",
   }
 };
 
