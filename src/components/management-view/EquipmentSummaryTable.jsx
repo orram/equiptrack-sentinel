@@ -18,9 +18,9 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
   const isHe = language === 'he';
 
   const subHeaders = isHe
-    ? ["תיקון", "במחסן", "הוצא", "סה\"כ"]
-    : ["Repair", "Storage", "Issued", "Total"];
-  const dataKeys = ['repair', 'storage', 'issued', 'total'];
+    ? ["במחסן", "הוצא", "תיקון", "סה\"כ"]
+    : ["Storage", "Issued", "Repair", "Total"];
+  const dataKeys = ['storage', 'issued', 'repair', 'total'];
 
   const strings = {
     platoonSummaryLabel: isHe ? 'סיכום פלוגתי' : 'Platoon Summary',
