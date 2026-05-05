@@ -32,6 +32,7 @@ export default function DataHealth() {
     const [conflicts, setConflicts] = useState([]);
     const [todayWeaponStatus, setTodayWeaponStatus] = useState('idle'); // idle, scanning, complete
     const [todayWeaponConflicts, setTodayWeaponConflicts] = useState([]);
+    const [selectedWeapons, setSelectedWeapons] = useState(new Set());
     const [assigningWeapons, setAssigningWeapons] = useState(false);
 
     const scanForTodayWeaponConflicts = async () => {
@@ -75,25 +76,38 @@ export default function DataHealth() {
         }
     };
 
+    const toggleWeaponSelection = (equipmentId) => {
+        const newSelected = new Set(selectedWeapons);
+        if (newSelected.has(equipmentId)) {
+            newSelected.delete(equipmentId);
+        } else {
+            newSelected.add(equipmentId);
+        }
+        setSelectedWeapons(newSelected);
+    };
+
     const bulkAssignWeapons = async () => {
-        if (todayWeaponConflicts.length === 0) return;
-        if (!confirm(`This will mark ${todayWeaponConflicts.length} weapon(s) as issued to their assigned soldiers and move from storage to issued. Continue?`)) {
+        if (selectedWeapons.size === 0) return;
+        if (!confirm(`This will mark ${selectedWeapons.size} weapon(s) as issued to their assigned soldiers and move from storage to issued. Continue?`)) {
             return;
         }
 
         setAssigningWeapons(true);
         let updated = 0;
         try {
-            for (const conflict of todayWeaponConflicts) {
-                await Equipment.update(conflict.equipmentDbId, {
-                    assignment_status: 'issued',
-                    issued_soldier_id: conflict.soldierId,
-                    issued_soldier_name: conflict.soldierName
-                });
-                updated++;
+            for (const equipmentId of selectedWeapons) {
+                const conflict = todayWeaponConflicts.find(c => c.equipmentId === equipmentId);
+                if (conflict) {
+                    await Equipment.update(conflict.equipmentDbId, {
+                        assignment_status: 'issued',
+                        issued_soldier_id: conflict.soldierId,
+                        issued_soldier_name: conflict.soldierName
+                    });
+                    updated++;
+                }
             }
             alert(`Successfully updated ${updated} weapon(s) to issued status.`);
-            setTodayWeaponConflicts([]);
+            setSelectedWeapons(new Set());
             await scanForTodayWeaponConflicts();
         } catch (error) {
             console.error("Error bulk assigning weapons:", error);
@@ -365,20 +379,29 @@ export default function DataHealth() {
                                  ) : (
                                      <div>
                                         <p className="text-blue-600 font-semibold mb-4">{todayWeaponConflicts.length} weapon(s) assigned today but still marked as storage:</p>
-                                        <div className="space-y-2 mb-4 max-h-48 overflow-y-auto border rounded-lg p-3 bg-blue-50">
-                                            {todayWeaponConflicts.map((conflict, idx) => (
-                                                <div key={idx} className="bg-white p-2 rounded text-sm">
-                                                    <p><strong>{conflict.equipmentId}</strong> ({conflict.equipmentName}) → {conflict.soldierName} ({conflict.soldierId})</p>
+                                        <div className="space-y-2 mb-4 border rounded-lg p-3 bg-blue-50">
+                                            {todayWeaponConflicts.map((conflict) => (
+                                                <div key={conflict.equipmentId} className="flex items-center gap-3 bg-white p-3 rounded border">
+                                                    <Checkbox
+                                                        checked={selectedWeapons.has(conflict.equipmentId)}
+                                                        onCheckedChange={() => toggleWeaponSelection(conflict.equipmentId)}
+                                                    />
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium"><strong>{conflict.equipmentId}</strong> ({conflict.equipmentName})</p>
+                                                        <p className="text-xs text-slate-500">→ {conflict.soldierName} ({conflict.soldierId})</p>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <Button 
-                                            onClick={bulkAssignWeapons} 
-                                            disabled={assigningWeapons}
-                                            className="bg-blue-600 hover:bg-blue-700"
-                                        >
-                                            {assigningWeapons ? 'Updating...' : `Bulk Assign ${todayWeaponConflicts.length} Weapon(s)`}
-                                        </Button>
+                                        {selectedWeapons.size > 0 && (
+                                            <Button 
+                                                onClick={bulkAssignWeapons} 
+                                                disabled={assigningWeapons}
+                                                className="bg-blue-600 hover:bg-blue-700 w-full"
+                                            >
+                                                {assigningWeapons ? 'Updating...' : `Assign Selected ${selectedWeapons.size} Weapon(s)`}
+                                            </Button>
+                                        )}
                                      </div>
                                  )}
                             </div>
