@@ -30,7 +30,6 @@ export default function ReturnTool() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [itemSearch, setItemSearch] = useState("");
   const [soldierSearch, setSoldierSearch] = useState("");
   const [filters, setFilters] = useState({
     platoon: "all",
@@ -91,12 +90,7 @@ export default function ReturnTool() {
       };
     }).filter(item => {
         const itemSoldier = item.soldier || {};
-        const itemSearchLower = itemSearch.toLowerCase();
         const soldierSearchLower = soldierSearch.toLowerCase();
-
-        const matchesItemSearch = !itemSearch ||
-          item.itemDetails.object_name?.toLowerCase().includes(itemSearchLower) ||
-          item.itemDetails.serial_number?.toLowerCase().includes(itemSearchLower);
 
         const matchesSoldierSearch = !soldierSearch ||
           itemSoldier.full_name?.toLowerCase().includes(soldierSearchLower) ||
@@ -106,9 +100,9 @@ export default function ReturnTool() {
         const matchesSoldier = filters.soldier === "all" || itemSoldier.soldier_id === filters.soldier;
         const matchesCondition = filters.condition === "all" || item.itemDetails.condition === filters.condition;
 
-        return matchesItemSearch && matchesSoldierSearch && matchesPlatoon && matchesSoldier && matchesCondition;
+        return matchesSoldierSearch && matchesPlatoon && matchesSoldier && matchesCondition;
     });
-  }, [assignments, equipment, inventoryItems, soldiers, itemSearch, soldierSearch, filters]);
+  }, [assignments, equipment, inventoryItems, soldiers, soldierSearch, filters]);
 
 
   const handleSelectItem = (assignmentId) => {
@@ -254,16 +248,7 @@ export default function ReturnTool() {
         {/* Filters and Search */}
         <Card className="mb-4 md:mb-6">
           <CardContent className="p-4 md:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder={t.searchItemOrSerial || "Item name / serial number"}
-                  value={itemSearch}
-                  onChange={(e) => setItemSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
