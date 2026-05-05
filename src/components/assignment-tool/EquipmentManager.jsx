@@ -195,6 +195,31 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     setIsProcessing(false);
   };
 
+  const handleReturnInventoryItem = async (inventoryItem, assignmentId) => {
+    setIsProcessing(true);
+    try {
+      // Mark assignment as returned
+      await Assignment.update(assignmentId, {
+        status: 'returned',
+        return_date: new Date().toISOString().split('T')[0],
+        notes: 'Returned via Equipment Manager'
+      });
+
+      // Increase available quantity
+      const invItem = inventoryItems.find(i => i.object_name === inventoryItem.object_name);
+      if (invItem) {
+        await InventoryItem.update(invItem.id, {
+          available_quantity: (invItem.available_quantity || 0) + (inventoryItem.quantity || 1)
+        });
+      }
+
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error("Error returning inventory item:", error);
+    }
+    setIsProcessing(false);
+  };
+
   const handleAssignEquipment = async (equipmentItem) => {
     if (pendingAssignments.some(p => p.serial_number === equipmentItem.serial_number)) {
         alert(t.itemAlreadyPending || "This item is already pending assignment.");
@@ -558,6 +583,17 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                           {t.sendForRepair || "Repair"}
                         </Button>
                       </>
+                    )}
+                    {item?.assignment_type === 'inventory' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleReturnInventoryItem(item, item?.assignment_id)}
+                        disabled={isProcessing}
+                      >
+                        <RotateCcw className="w-4 h-4 mr-1" />
+                        {t.returnToStorage || "Return"}
+                      </Button>
                     )}
                   </div>
                 </div>
