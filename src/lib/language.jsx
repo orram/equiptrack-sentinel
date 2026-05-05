@@ -226,6 +226,8 @@ export const translations = {
     currentlyIssuedTo: "Currently issued to",
     otherAvailableEquipment: "Other Available Equipment",
     availableInventory: "Available Inventory",
+    searchItemOrSerial: "Item name / serial number",
+    searchSoldierNameOrId: "Soldier name / ID",
   },
   he: {
     dashboard: "לוח בקרה",
@@ -443,6 +445,8 @@ export const translations = {
     currentlyIssuedTo: "מוצמד כעת ל",
     otherAvailableEquipment: "ציוד אחר זמין",
     availableInventory: "מלאי זמין",
+    searchItemOrSerial: "שם פריט / מספר סידורי",
+    searchSoldierNameOrId: "שם חייל / מ.א",
   }
 };
 
