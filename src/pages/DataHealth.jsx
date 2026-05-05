@@ -35,10 +35,12 @@ export default function DataHealth() {
         setSameSoldierDuplicates([]);
         try {
             const allAssignments = await Assignment.filter({ status: "active" });
+            // Only check serialized equipment for duplicates, skip inventory items
+            const serializedAssignments = allAssignments.filter(a => !a.assignment_type || a.assignment_type === 'serialized');
             const equipmentMap = {};
 
-            // Group assignments by equipment_id
-            allAssignments.forEach(assignment => {
+            // Group assignments by equipment_id (only serialized)
+            serializedAssignments.forEach(assignment => {
                 if (!equipmentMap[assignment.equipment_id]) {
                     equipmentMap[assignment.equipment_id] = [];
                 }
