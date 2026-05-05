@@ -116,14 +116,13 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
 
   const suggestionsInStorage = useMemo(() => {
     if (!soldierHistoricalEquipmentIds.length) return [];
-    const currentlyIssuedIds = new Set(issuedToSoldier.map(e => e?.serial_number));
+    // Only check if assignment_status is 'storage', ignore issued_soldier_id/issued_soldier_name
     return equipment.filter(e =>
       e?.serial_number &&
       soldierHistoricalEquipmentIds.includes(e.serial_number) &&
-      !currentlyIssuedIds.has(e.serial_number) &&
       e.assignment_status === 'storage'
     );
-  }, [equipment, soldierHistoricalEquipmentIds, issuedToSoldier]);
+  }, [equipment, soldierHistoricalEquipmentIds]);
 
   const availableEquipment = useMemo(() => {
     const currentlyIssuedIds = new Set(allIssuedItems.map(item => item?.serial_number).filter(Boolean));
