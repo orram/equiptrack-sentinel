@@ -88,11 +88,15 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   }, [activeAssignments, inventoryItems]);
 
   const allIssuedItems = useMemo(() => {
-    const serialized = issuedToSoldier.map(item => ({
-      ...item,
-      assignment_type: 'serialized',
-      assignment_id: activeAssignments.find(a => a?.equipment_id === item?.serial_number && (!a.assignment_type || a.assignment_type === 'serialized'))?.id
-    }));
+    const serialized = issuedToSoldier.map(item => {
+      const assignment = activeAssignments.find(a => a?.equipment_id === item?.serial_number && (!a.assignment_type || a.assignment_type === 'serialized'));
+      return {
+        ...item,
+        assignment_type: 'serialized',
+        assignment_id: assignment?.id,
+        assignment_date: assignment?.assignment_date
+      };
+    });
     const inventory = issuedInventory.map(item => ({
       ...item,
       assignment_type: 'inventory',
@@ -504,6 +508,11 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                       ) : (
                         <p className="text-sm text-slate-500">
                           {t.serialNumber || "Serial"}: {item?.serial_number || "N/A"}
+                        </p>
+                      )}
+                      {item?.assignment_date && (
+                        <p className="text-xs text-slate-400">
+                          {t.from || "From"}: {item.assignment_date}
                         </p>
                       )}
                     </div>
