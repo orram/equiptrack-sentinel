@@ -141,7 +141,7 @@ export default function AmralControlTable() {
       return { isSinglePlatoonView, singlePlatoonName: platoon, tableData, squads, equipmentTypes, totalsBySquad, platoonTotal };
 
     } else {
-      const platoonOrder = ["א", "ב", "ג", "מסייעת", "פלסם", "דרג"];
+      const platoonOrder = ["א", "ב", "ג", "מסייעת", "דרג"];
       const platoons = platoonOrder.filter(p => selectedPlatoons.includes(p))
           .concat(selectedPlatoons.filter(p => !platoonOrder.includes(p)).sort());
       const tableData = {};
