@@ -104,8 +104,8 @@ export default function Layout({ children }) {
 
   return (
     <LanguageContext.Provider value={{ language, toggleLanguage, t, isRTL }}>
-      <SidebarProvider>
       <div className={`flex min-h-screen w-full bg-slate-50 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <SidebarProvider>
           <Sidebar className={`border-slate-200 bg-white ${isRTL ? 'border-l' : 'border-r'}`}>
             <SidebarHeader className="border-b border-slate-200 p-4 md:p-6">
               <div className="flex items-center justify-between">
@@ -259,8 +259,8 @@ export default function Layout({ children }) {
               {children}
             </div>
           </SidebarInset>
-      </div>
       </SidebarProvider>
+      </div>
     </LanguageContext.Provider>
 
   );
