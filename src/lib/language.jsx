@@ -195,6 +195,8 @@ export const translations = {
     errorLoggingOut: "Error logging out. Please try again.",
     signOut: "Sign Out",
     createSoldier: "Create Soldier",
+    cannotDeleteSoldierHasEquipment: (name, count) => `Cannot delete ${name}. This soldier has ${count} active equipment item(s). Please return all equipment before deleting.`,
+    confirmDeleteSoldier: (name) => `Are you sure you want to delete ${name}? This cannot be undone.`,
   },
   he: {
     dashboard: "לוח בקרה",
@@ -381,6 +383,8 @@ export const translations = {
     errorLoggingOut: "שגיאה בהתנתקות. אנא נסה שוב.",
     signOut: "התנתק",
     createSoldier: "צור חייל",
+    cannotDeleteSoldierHasEquipment: (name, count) => `לא ניתן למחוק את ${name}. לחייל זה יש ${count} פריטי ציוד פעילים. יש להחזיר את כל הציוד לפני המחיקה.`,
+    confirmDeleteSoldier: (name) => `האם אתה בטוח שברצונך למחוק את ${name}? פעולה זו אינה ניתנת לביטול.`,
   }
 };
 

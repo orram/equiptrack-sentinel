@@ -17,7 +17,7 @@ import EditSoldierForm from "../components/soldiers/EditSoldierForm";
 import { useLanguage } from "@/lib/language";
 
 export default function Soldiers() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [soldiers, setSoldiers] = useState([]);
   const [equipment, setEquipment] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]); // New state for inventory items
@@ -155,10 +155,10 @@ export default function Soldiers() {
   const handleDeleteSoldier = async (soldier) => {
     const activeAssignments = await Assignment.filter({ soldier_id: soldier.soldier_id, status: 'active' });
     if (activeAssignments.length > 0) {
-      alert(`Cannot delete ${soldier.full_name}. This soldier has ${activeAssignments.length} active equipment item(s). Please return all equipment before deleting.`);
+      alert(t.cannotDeleteSoldierHasEquipment(soldier.full_name, activeAssignments.length));
       return;
     }
-    if (!confirm(`Are you sure you want to delete ${soldier.full_name}? This cannot be undone.`)) return;
+    if (!confirm(t.confirmDeleteSoldier(soldier.full_name))) return;
     await Soldier.delete(soldier.id);
     setSelectedSoldier(null);
     loadData();
