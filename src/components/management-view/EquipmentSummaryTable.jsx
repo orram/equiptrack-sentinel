@@ -210,7 +210,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 {platoon}
               </TableHead>
             ))}
-            <TableHead colSpan={subHeaders.length} className={`text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400 ${!isHe ? 'sticky right-0 z-10' : ''}`}>
+            <TableHead colSpan={subHeaders.length} className={`text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400 ${!isHe ? 'sticky right-0 z-10' : 'sticky left-0 z-10'}`}>
               {strings.grandTotalHeader}
             </TableHead>
           </TableRow>
@@ -228,7 +228,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               ))
             )}
             {subHeaders.map((sub, index) => (
-              <TableHead key={`grand-total-${sub}`} className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l ${!isHe ? 'sticky right-0 z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
+              <TableHead key={`grand-total-${sub}`} className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l ${!isHe ? 'sticky right-0 z-10' : 'sticky left-0 z-10'} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                 {sub}
               </TableHead>
             ))}
@@ -255,7 +255,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 </React.Fragment>
               ))}
               {subHeaders.map((sub, index) => (
-                <TableCell key={`${type}-grand-total-${sub}`} className={`text-center font-semibold bg-slate-100 border-l ${!isHe ? 'sticky right-0 z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
+                <TableCell key={`${type}-grand-total-${sub}`} className={`text-center font-semibold bg-slate-100 border-l ${!isHe ? 'sticky right-0 z-10' : 'sticky left-0 z-10'} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                   {tableData[type]?.grandTotal?.[dataKeys[index]] || 0}
                 </TableCell>
               ))}
@@ -282,7 +282,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               </React.Fragment>
             ))}
             {subHeaders.map((sub, index) => (
-              <TableCell key={`total-grand-total-${sub}`} className={`text-center bg-slate-900 text-white border-l ${!isHe ? 'sticky right-0 z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
+              <TableCell key={`total-grand-total-${sub}`} className={`text-center bg-slate-900 text-white border-l ${!isHe ? 'sticky right-0 z-10' : 'sticky left-0 z-10'} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}>
                 {grandTotal?.[dataKeys[index]] || 0}
               </TableCell>
             ))}
