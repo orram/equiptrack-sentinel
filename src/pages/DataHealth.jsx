@@ -34,6 +34,77 @@ export default function DataHealth() {
     const [todayWeaponConflicts, setTodayWeaponConflicts] = useState([]);
     const [selectedWeapons, setSelectedWeapons] = useState(new Set());
     const [assigningWeapons, setAssigningWeapons] = useState(false);
+    const [weekWeaponStatus, setWeekWeaponStatus] = useState('idle'); // idle, scanning, complete
+    const [weekWeaponConflicts, setWeekWeaponConflicts] = useState([]);
+    const [selectedWeekWeapons, setSelectedWeekWeapons] = useState(new Set());
+    const [assigningWeekWeapons, setAssigningWeekWeapons] = useState(false);
+
+    const scanForLastWeekWeaponConflicts = async () => {
+        setWeekWeaponStatus('scanning');
+        setWeekWeaponConflicts([]);
+        try {
+            const allEquipment = await Equipment.list();
+            const allAssignments = await Assignment.list();
+            const allSoldiers = await Soldier.list();
+            const today = new Date();
+            const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const todayDateStr = today.toISOString().split('T')[0];
+            const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+            // Find all soldiers assigned equipment in the last 7 days
+            const soldiersAssignedLastWeek = new Set(
+                allAssignments
+                    .filter(a => 
+                        a.assignment_date >= sevenDaysAgoStr && 
+                        a.assignment_date <= todayDateStr && 
+                        a.status === 'active'
+                    )
+                    .map(a => a.soldier_id)
+            );
+
+            const foundConflicts = [];
+
+            // For each soldier assigned in last week, find their OTHER equipment that is in storage but has active assignments
+            soldiersAssignedLastWeek.forEach(soldierId => {
+                const soldier = allSoldiers.find(s => s.soldier_id === soldierId);
+                
+                // Get all active assignments for this soldier from last week
+                const weekSoldierAssignments = allAssignments.filter(a => 
+                    a.soldier_id === soldierId && 
+                    a.assignment_date >= sevenDaysAgoStr && 
+                    a.assignment_date <= todayDateStr &&
+                    a.status === 'active' &&
+                    (!a.assignment_type || a.assignment_type === 'serialized')
+                );
+
+                // Check each assignment to see if equipment is in storage
+                weekSoldierAssignments.forEach(assignment => {
+                    const equipment = allEquipment.find(e => e.serial_number === assignment.equipment_id);
+                    
+                    if (equipment && equipment.assignment_status === 'storage') {
+                        foundConflicts.push({
+                            equipmentId: equipment.serial_number,
+                            equipmentName: equipment.object_name,
+                            soldierId: soldierId,
+                            soldierName: assignment.soldier_name,
+                            platoon: soldier?.platoon || 'N/A',
+                            squad: soldier?.squad || 'N/A',
+                            rank: soldier?.rank || 'N/A',
+                            equipmentDbId: equipment.id,
+                            assignmentId: assignment.id,
+                            assignmentDate: assignment.assignment_date
+                        });
+                    }
+                });
+            });
+
+            setWeekWeaponConflicts(foundConflicts);
+            setWeekWeaponStatus('complete');
+        } catch (error) {
+            console.error("Error scanning for last week's weapon conflicts:", error);
+            setWeekWeaponStatus('error');
+        }
+    };
 
     const scanForTodayWeaponConflicts = async () => {
         setTodayWeaponStatus('scanning');
@@ -103,6 +174,16 @@ export default function DataHealth() {
         setSelectedWeapons(newSelected);
     };
 
+    const toggleWeekWeaponSelection = (equipmentId) => {
+        const newSelected = new Set(selectedWeekWeapons);
+        if (newSelected.has(equipmentId)) {
+            newSelected.delete(equipmentId);
+        } else {
+            newSelected.add(equipmentId);
+        }
+        setSelectedWeekWeapons(newSelected);
+    };
+
     const bulkAssignWeapons = async () => {
         if (selectedWeapons.size === 0) return;
         if (!confirm(`This will mark ${selectedWeapons.size} weapon(s) as issued to their assigned soldiers and move from storage to issued. Continue?`)) {
@@ -132,6 +213,38 @@ export default function DataHealth() {
             await scanForTodayWeaponConflicts();
         } finally {
             setAssigningWeapons(false);
+        }
+    };
+
+    const bulkAssignWeekWeapons = async () => {
+        if (selectedWeekWeapons.size === 0) return;
+        if (!confirm(`This will mark ${selectedWeekWeapons.size} weapon(s) from last week as issued to their assigned soldiers and move from storage to issued. Continue?`)) {
+            return;
+        }
+
+        setAssigningWeekWeapons(true);
+        let updated = 0;
+        try {
+            for (const equipmentId of selectedWeekWeapons) {
+                const conflict = weekWeaponConflicts.find(c => c.equipmentId === equipmentId);
+                if (conflict) {
+                    await Equipment.update(conflict.equipmentDbId, {
+                        assignment_status: 'issued',
+                        issued_soldier_id: conflict.soldierId,
+                        issued_soldier_name: conflict.soldierName
+                    });
+                    updated++;
+                }
+            }
+            alert(`Successfully updated ${updated} weapon(s) from last week to issued status.`);
+            setSelectedWeekWeapons(new Set());
+            await scanForLastWeekWeaponConflicts();
+        } catch (error) {
+            console.error("Error bulk assigning last week weapons:", error);
+            alert(`Updated ${updated} weapon(s) before error. Check console.`);
+            await scanForLastWeekWeaponConflicts();
+        } finally {
+            setAssigningWeekWeapons(false);
         }
     };
 
@@ -372,6 +485,63 @@ export default function DataHealth() {
                         <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
                     </div>
                 </div>
+
+                {/* Last Week's Weapon Conflict Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <AlertCircle className="w-5 h-5 text-purple-600"/>
+                           Last Week Weapon Assignment Sync
+                        </CardTitle>
+                        <CardDescription>Find soldiers assigned equipment in the last 7 days with weapons still in storage, and bulk issue those weapons.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {weekWeaponStatus === 'idle' && (
+                            <Button onClick={scanForLastWeekWeaponConflicts} variant="outline">Scan Last Week's Assignments</Button>
+                        )}
+                        {weekWeaponStatus === 'scanning' && (
+                           <p className="text-slate-600">Scanning... Please wait.</p>
+                        )}
+                        {weekWeaponStatus === 'complete' && (
+                             <div className="space-y-4">
+                                 {weekWeaponConflicts.length === 0 ? (
+                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                 ) : (
+                                     <div>
+                                        <p className="text-purple-600 font-semibold mb-4">{weekWeaponConflicts.length} weapon(s) assigned in last 7 days but still marked as storage:</p>
+                                        <div className="space-y-2 mb-4 border rounded-lg p-3 bg-purple-50">
+                                            {weekWeaponConflicts.map((conflict) => (
+                                                <div key={conflict.equipmentId} className="flex items-center gap-3 bg-white p-3 rounded border">
+                                                    <Checkbox
+                                                        checked={selectedWeekWeapons.has(conflict.equipmentId)}
+                                                        onCheckedChange={() => toggleWeekWeaponSelection(conflict.equipmentId)}
+                                                    />
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-medium"><strong>{conflict.equipmentId}</strong> ({conflict.equipmentName})</p>
+                                                        <p className="text-xs text-slate-500">→ {conflict.soldierName} ({conflict.soldierId}) | {conflict.rank} | {conflict.platoon} / {conflict.squad}</p>
+                                                        <p className="text-xs text-slate-400">Assigned: {conflict.assignmentDate}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {selectedWeekWeapons.size > 0 && (
+                                            <Button 
+                                                onClick={bulkAssignWeekWeapons} 
+                                                disabled={assigningWeekWeapons}
+                                                className="bg-purple-600 hover:bg-purple-700 w-full"
+                                            >
+                                                {assigningWeekWeapons ? 'Updating...' : `Assign Selected ${selectedWeekWeapons.size} Weapon(s)`}
+                                            </Button>
+                                        )}
+                                     </div>
+                                 )}
+                            </div>
+                        )}
+                        {weekWeaponStatus === 'error' && (
+                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Today's Weapon Conflict Card */}
                 <Card className="mb-6">
