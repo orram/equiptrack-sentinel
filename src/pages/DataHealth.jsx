@@ -76,12 +76,7 @@ export default function DataHealth() {
                             soldierName: assignments[0].soldier_name,
                             soldierId: assignments[0].soldier_id,
                             assignmentDate: assignments[0].assignment_date,
-                            assignments: assignments.sort((a, b) => {
-                              // Sort by: active first, then by created_date (newest first)
-                              if (a.status === 'active' && b.status !== 'active') return -1;
-                              if (a.status !== 'active' && b.status === 'active') return 1;
-                              return new Date(b.created_date) - new Date(a.created_date);
-                            })
+                            assignments: assignments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
                         });
                     }
                 });
