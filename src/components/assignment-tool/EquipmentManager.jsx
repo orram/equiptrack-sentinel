@@ -193,7 +193,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
 
   const handleAssignEquipment = async (equipmentItem) => {
     if (pendingAssignments.some(p => p.serial_number === equipmentItem.serial_number)) {
-        alert("This item is already pending assignment.");
+        alert(t.itemAlreadyPending || "This item is already pending assignment.");
         return;
     }
 
@@ -275,7 +275,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
 
     } catch (error) {
       console.error("Error processing equipment reassignment:", error);
-      alert("Error processing reassignment. Please try again.");
+      alert(t.errorProcessingReassignment || "Error processing reassignment. Please try again.");
     }
     setIsProcessing(false);
   };
@@ -291,7 +291,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     if (!inventoryItem?.object_name || !soldier?.soldier_id) return;
 
     if (pendingAssignments.some(p => p.assignment_type === 'inventory' && p.object_name === inventoryItem.object_name)) {
-      alert("This inventory item is already pending assignment.");
+      alert(t.inventoryItemAlreadyPending || "This inventory item is already pending assignment.");
       return;
     }
 
@@ -377,19 +377,19 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
       }
     } catch (error) {
       console.error("Error completing assignments:", error);
-      alert("Error completing assignments. Please try again.");
+      alert(t.errorCompletingAssignments || "Error completing assignments. Please try again.");
     }
     setIsProcessing(false);
   };
 
   const handleAddNewEquipment = async () => {
     if (!newSerialNumber.trim() || !newObjectName.trim()) {
-      alert("Please enter both a serial number and equipment name.");
+      alert(t.enterSerialAndName || "Please enter both a serial number and equipment name.");
       return;
     }
     const exists = equipment.find(e => e.serial_number === newSerialNumber.trim());
     if (exists) {
-      alert("Equipment with this serial number already exists.");
+      alert(t.serialAlreadyExists || "Equipment with this serial number already exists.");
       return;
     }
     setIsAddingNew(true);
@@ -417,7 +417,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
       }]);
     } catch (error) {
       console.error("Error creating equipment:", error);
-      alert("Error creating equipment. Please try again.");
+      alert(t.errorCreatingEquipment || "Error creating equipment. Please try again.");
     }
     setIsAddingNew(false);
   };
@@ -484,7 +484,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
         </CardHeader>
         <CardContent className="max-h-96 overflow-y-auto">
           {allIssuedItems.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">{t.noEquipmentIssued || "No equipment currently issued."}</p>
+            <p className="text-slate-500 text-center py-8">{t.noEquipmentIssued}</p>
           ) : (
             <div className="space-y-3">
               {allIssuedItems.map((item, index) => (
@@ -499,7 +499,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                       <h4 className="font-medium">{item?.object_name || "Unknown Item"}</h4>
                       {item?.assignment_type === 'inventory' ? (
                         <p className="text-sm text-slate-500">
-                          {t.quantity || "Quantity"}: {item?.quantity || 0}
+                          {t.quantity}: {item?.quantity || 0}
                         </p>
                       ) : (
                         <p className="text-sm text-slate-500">
@@ -545,7 +545,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
-              {t.pendingAssignments || "Pending Assignments"} ({pendingAssignments.length})
+              {t.pendingAssignments} ({pendingAssignments.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="max-h-96 overflow-y-auto">
@@ -672,7 +672,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                 {filteredOtherAvailableEquipment.length > 0 && (
                   <div>
                     {filteredPreviouslyUsedEquipment.length > 0 && <div className="h-4" />}
-                    <h4 className="font-medium text-slate-700 mb-2 px-2">{t.otherAvailableEquipment || "Other Available Equipment"}</h4>
+                    <h4 className="font-medium text-slate-700 mb-2 px-2">{t.otherAvailableEquipment}</h4>
                     {filteredOtherAvailableEquipment.map((item, index) => (
                       <div key={item?.id || item?.serial_number || index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
                         <div className="flex items-center gap-3">
@@ -682,7 +682,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                             <p className="text-sm text-slate-500">{t.serialNumber || "Serial"}: {item?.serial_number || "N/A"}</p>
                             {item?.assignment_status === 'issued' && (
                               <p className="text-xs text-orange-600">
-                                {t.currentlyIssuedTo || "Currently issued to"}: {item?.issued_soldier_name || "Unknown"}
+                                {t.currentlyIssuedTo}: {item?.issued_soldier_name || "Unknown"}
                               </p>
                             )}
                           </div>
@@ -704,7 +704,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                 {filteredAvailableInventory.length > 0 && (
                   <div>
                     {(filteredOtherAvailableEquipment.length > 0 || filteredPreviouslyUsedEquipment.length > 0) && <div className="h-4" />}
-                    <h4 className="font-medium text-slate-700 mb-2 px-2">{t.availableInventory || "Available Inventory"}</h4>
+                    <h4 className="font-medium text-slate-700 mb-2 px-2">{t.availableInventory}</h4>
                     {filteredAvailableInventory.map((item, index) => (
                       <div key={item?.id || item?.object_name || index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50">
                         <div className="flex items-center gap-3">
@@ -712,7 +712,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                           <div>
                             <h4 className="font-medium">{item?.object_name || "Unknown Item"}</h4>
                             <p className="text-sm text-slate-500">
-                              {t.available || "Available"}: {item?.available_quantity || 0} / {item?.total_quantity || 0}
+                              {t.available}: {item?.available_quantity || 0} / {item?.total_quantity || 0}
                             </p>
                           </div>
                         </div>
@@ -745,21 +745,21 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
               {!showAddBySerial ? (
                 <Button variant="outline" className="w-full" onClick={() => setShowAddBySerial(true)}>
                   <PackagePlus className="w-4 h-4 mr-2" />
-                  Add Missing Equipment by Serial Number
+                  {t.addMissingEquipmentBySerial || "Add Missing Equipment by Serial Number"}
                 </Button>
               ) : (
                 <div className="space-y-3 p-4 border-2 border-dashed border-slate-300 rounded-lg bg-slate-50">
                   <h4 className="font-semibold text-slate-700 flex items-center gap-2">
                     <PackagePlus className="w-4 h-4" />
-                    Add New Equipment
+                    {t.addNewEquipmentLabel || "Add New Equipment"}
                   </h4>
                   <Input
-                    placeholder="Serial Number *"
+                    placeholder={t.serialNumberPlaceholder || "Serial Number *"}
                     value={newSerialNumber}
                     onChange={(e) => setNewSerialNumber(e.target.value)}
                   />
                   <Input
-                    placeholder="Equipment Name (e.g. רובה M16) *"
+                    placeholder={t.equipmentNamePlaceholder || "Equipment Name *"}
                     value={newObjectName}
                     onChange={(e) => setNewObjectName(e.target.value)}
                   />
@@ -769,10 +769,10 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                       disabled={isAddingNew || !newSerialNumber.trim() || !newObjectName.trim()}
                       className="flex-1"
                     >
-                      {isAddingNew ? "Adding..." : "Add & Issue"}
+                      {isAddingNew ? (t.addingEquipment || "Adding...") : (t.addAndIssue || "Add & Issue")}
                     </Button>
                     <Button variant="outline" onClick={() => { setShowAddBySerial(false); setNewSerialNumber(""); setNewObjectName(""); }}>
-                      Cancel
+                      {t.cancel || "Cancel"}
                     </Button>
                   </div>
                 </div>

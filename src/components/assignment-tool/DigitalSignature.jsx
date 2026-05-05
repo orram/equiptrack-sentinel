@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -107,7 +106,7 @@ export default function DigitalSignature({
 
     } catch (err) {
       console.error("Error completing assignment:", err);
-      setError("An error occurred while saving the assignment. Please try again.");
+      setError(t.errorSavingAssignment || "An error occurred while saving the assignment. Please try again.");
     } finally {
       setIsProcessing(false);
     }

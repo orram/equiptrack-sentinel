@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Soldier } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,7 +33,7 @@ export default function SoldierDetailsEdit({ soldier, onSave, onBack, t }) {
       onSave(soldierData); // Pass updated data back to parent
     } catch (error) {
       console.error("Error updating soldier:", error);
-      alert("Error updating soldier. Please try again.");
+      alert(t.errorUpdatingData || "Error updating soldier. Please try again.");
     }
     setIsProcessing(false);
   };
