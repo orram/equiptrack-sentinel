@@ -153,6 +153,11 @@ export default function Soldiers() {
   };
 
   const handleDeleteSoldier = async (soldier) => {
+    const activeAssignments = await Assignment.filter({ soldier_id: soldier.soldier_id, status: 'active' });
+    if (activeAssignments.length > 0) {
+      alert(`Cannot delete ${soldier.full_name}. This soldier has ${activeAssignments.length} active equipment item(s). Please return all equipment before deleting.`);
+      return;
+    }
     if (!confirm(`Are you sure you want to delete ${soldier.full_name}? This cannot be undone.`)) return;
     await Soldier.delete(soldier.id);
     setSelectedSoldier(null);
