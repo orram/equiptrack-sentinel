@@ -424,6 +424,19 @@ export default function ReturnTool() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Link to Equipment Search */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-slate-600 mb-3">
+            {t.soldierNotFound || "Soldier not found?"}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => navigate(createPageUrl("Equipment"))}
+          >
+            {t.searchEquipmentBySN || "Search Equipment by Serial Number"}
+          </Button>
+        </div>
       </div>
     </div>
   );
