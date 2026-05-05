@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Equipment, Assignment } from "@/entities/all";
+import { Equipment, Assignment, Soldier } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ export default function DataHealth() {
         try {
             const allEquipment = await Equipment.list();
             const allAssignments = await Assignment.list();
+            const allSoldiers = await Soldier.list();
             const today = new Date().toISOString().split('T')[0];
             
             // Find all soldiers assigned equipment today
@@ -54,6 +55,8 @@ export default function DataHealth() {
             
             // For each soldier assigned today, find their OTHER equipment that is in storage but has active assignments
             soldiersAssignedToday.forEach(soldierId => {
+                const soldier = allSoldiers.find(s => s.soldier_id === soldierId);
+                
                 // Get all active assignments for this soldier
                 const allSoldierAssignments = allAssignments.filter(a => 
                     a.soldier_id === soldierId && 
@@ -71,6 +74,9 @@ export default function DataHealth() {
                             equipmentName: equipment.object_name,
                             soldierId: soldierId,
                             soldierName: assignment.soldier_name,
+                            platoon: soldier?.platoon || 'N/A',
+                            squad: soldier?.squad || 'N/A',
+                            rank: soldier?.rank || 'N/A',
                             equipmentDbId: equipment.id,
                             assignmentId: assignment.id,
                             assignmentDate: assignment.assignment_date
@@ -399,7 +405,7 @@ export default function DataHealth() {
                                                     />
                                                     <div className="flex-1">
                                                         <p className="text-sm font-medium"><strong>{conflict.equipmentId}</strong> ({conflict.equipmentName})</p>
-                                                        <p className="text-xs text-slate-500">→ {conflict.soldierName} ({conflict.soldierId})</p>
+                                                        <p className="text-xs text-slate-500">→ {conflict.soldierName} ({conflict.soldierId}) | {conflict.rank} | {conflict.platoon} / {conflict.squad}</p>
                                                     </div>
                                                 </div>
                                             ))}
