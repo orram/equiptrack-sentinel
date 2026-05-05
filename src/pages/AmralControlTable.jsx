@@ -343,6 +343,7 @@ export default function AmralControlTable() {
               data={processedData}
               isLoading={isLoading}
               onViewModeChange={setIsDetailedView}
+              language={language}
             />
           </CardContent>
         </Card>

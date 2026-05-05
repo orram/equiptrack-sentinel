@@ -375,6 +375,7 @@ export default function WeaponControlTable() {
               data={processedData}
               isLoading={isLoading}
               onViewModeChange={setIsDetailedView}
+              language={language}
             />
           </CardContent>
         </Card>

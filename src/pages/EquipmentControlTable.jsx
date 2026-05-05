@@ -342,6 +342,7 @@ export default function EquipmentControlTable() {
               data={processedData}
               isLoading={isLoading}
               onViewModeChange={setIsDetailedView}
+              language={language}
             />
           </CardContent>
         </Card>
