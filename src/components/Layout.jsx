@@ -84,6 +84,12 @@ export default function Layout({ children }) {
     { title: t.returnTool, url: createPageUrl("ReturnTool"), icon: RotateCcw },
   ];
 
+  const controlTableItems = [
+    { title: t.weaponControlTable, url: createPageUrl("WeaponControlTable"), icon: LayoutGrid },
+    { title: t.equipmentControlTable, url: createPageUrl("EquipmentControlTable"), icon: ClipboardList },
+    { title: t.amralControlTable, url: createPageUrl("AmralControlTable"), icon: Radio },
+  ];
+
   const systemToolsItems = [
     { title: t.equipment, url: createPageUrl("Equipment"), icon: Package },
     { title: t.inventory, url: createPageUrl("Inventory"), icon: Layers },
@@ -94,12 +100,6 @@ export default function Layout({ children }) {
     { title: t.dataHealth, url: createPageUrl("DataHealth"), icon: Wrench },
     { title: t.documentGenerator, url: createPageUrl("DocumentGenerator"), icon: FileText },
     { title: t.settings, url: createPageUrl("Settings"), icon: Settings },
-  ];
-
-  const controlTableItems = [
-    { title: t.weaponControlTable, url: createPageUrl("WeaponControlTable"), icon: LayoutGrid },
-    { title: t.equipmentControlTable, url: createPageUrl("EquipmentControlTable"), icon: ClipboardList },
-    { title: t.amralControlTable, url: createPageUrl("AmralControlTable"), icon: Radio },
   ];
 
   return (
@@ -158,11 +158,11 @@ export default function Layout({ children }) {
               
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 md:px-3 py-2 mt-4">
-                  {t.systemTools}
+                  {t.managementViews}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {systemToolsItems.map((item) => (
+                    {controlTableItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
@@ -180,14 +180,14 @@ export default function Layout({ children }) {
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
-              
+
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 md:px-3 py-2 mt-4">
-                  {t.managementViews}
+                  {t.systemTools}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {controlTableItems.map((item) => (
+                    {systemToolsItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
