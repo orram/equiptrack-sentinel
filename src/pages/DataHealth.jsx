@@ -34,7 +34,7 @@ export default function DataHealth() {
         setDuplicates([]);
         setSameSoldierDuplicates([]);
         try {
-            const allAssignments = await Assignment.filter({ status: "active" });
+            const allAssignments = await Assignment.list();
             // Only check serialized equipment for duplicates, skip inventory items
             const serializedAssignments = allAssignments.filter(a => !a.assignment_type || a.assignment_type === 'serialized');
             const equipmentMap = {};
@@ -56,7 +56,7 @@ export default function DataHealth() {
                     assignments: assignments.sort((a, b) => new Date(b.assignment_date) - new Date(a.assignment_date))
                 }));
 
-            // Find duplicates where same soldier is assigned to same equipment on same day
+            // Find duplicates where same soldier has multiple assignments (active or returned) on same day
             const sameSoldierDups = [];
             foundDuplicates.forEach(dup => {
                 const groupedBySoldierDate = {};
@@ -68,7 +68,7 @@ export default function DataHealth() {
                     groupedBySoldierDate[key].push(assignment);
                 });
 
-                // Find groups with more than one assignment
+                // Find groups with more than one assignment (active or returned)
                 Object.entries(groupedBySoldierDate).forEach(([key, assignments]) => {
                     if (assignments.length > 1) {
                         sameSoldierDups.push({
@@ -76,7 +76,12 @@ export default function DataHealth() {
                             soldierName: assignments[0].soldier_name,
                             soldierId: assignments[0].soldier_id,
                             assignmentDate: assignments[0].assignment_date,
-                            assignments: assignments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+                            assignments: assignments.sort((a, b) => {
+                              // Sort by: active first, then by created_date (newest first)
+                              if (a.status === 'active' && b.status !== 'active') return -1;
+                              if (a.status !== 'active' && b.status === 'active') return 1;
+                              return new Date(b.created_date) - new Date(a.created_date);
+                            })
                         });
                     }
                 });
