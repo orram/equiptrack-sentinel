@@ -30,6 +30,94 @@ export default function DataHealth() {
     const [selectedForRemoval, setSelectedForRemoval] = useState(new Set());
     const [conflictStatus, setConflictStatus] = useState('idle'); // idle, scanning, complete
     const [conflicts, setConflicts] = useState([]);
+    const [todayWeaponStatus, setTodayWeaponStatus] = useState('idle'); // idle, scanning, complete
+    const [todayWeaponConflicts, setTodayWeaponConflicts] = useState([]);
+    const [assigningWeapons, setAssigningWeapons] = useState(false);
+
+    const scanForTodayWeaponConflicts = async () => {
+        setTodayWeaponStatus('scanning');
+        setTodayWeaponConflicts([]);
+        try {
+            const allEquipment = await Equipment.list();
+            const allAssignments = await Assignment.list();
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Get soldiers assigned equipment today
+            const soldiersAssignedToday = new Set();
+            allAssignments
+                .filter(a => a.assignment_date === today && a.status === 'active')
+                .forEach(a => {
+                    soldiersAssignedToday.add(a.soldier_id);
+                });
+            
+            const foundConflicts = [];
+            
+            // Check each soldier assigned today
+            soldiersAssignedToday.forEach(soldierId => {
+                // Find weapons in storage that have active assignments for this soldier
+                const weaponsInStorage = allEquipment.filter(e => 
+                    e.assignment_status === 'storage' && 
+                    e.issued_soldier_id === soldierId
+                );
+                
+                // Also check if there are active assignments for this soldier on same equipment
+                weaponsInStorage.forEach(weapon => {
+                    const activeAssignment = allAssignments.find(a =>
+                        a.equipment_id === weapon.serial_number &&
+                        a.soldier_id === soldierId &&
+                        a.status === 'active'
+                    );
+                    
+                    if (activeAssignment) {
+                        const soldierInfo = allAssignments.find(a => a.soldier_id === soldierId)?.soldier_name;
+                        foundConflicts.push({
+                            equipmentId: weapon.serial_number,
+                            equipmentName: weapon.object_name,
+                            soldierId: soldierId,
+                            soldierName: soldierInfo || 'Unknown',
+                            equipmentDbId: weapon.id,
+                            assignmentId: activeAssignment.id
+                        });
+                    }
+                });
+            });
+            
+            setTodayWeaponConflicts(foundConflicts);
+            setTodayWeaponStatus('complete');
+        } catch (error) {
+            console.error("Error scanning for today's weapon conflicts:", error);
+            setTodayWeaponStatus('error');
+        }
+    };
+
+    const bulkAssignWeapons = async () => {
+        if (todayWeaponConflicts.length === 0) return;
+        if (!confirm(`This will mark ${todayWeaponConflicts.length} weapon(s) as issued to their assigned soldiers and move from storage to issued. Continue?`)) {
+            return;
+        }
+
+        setAssigningWeapons(true);
+        let updated = 0;
+        try {
+            for (const conflict of todayWeaponConflicts) {
+                await Equipment.update(conflict.equipmentDbId, {
+                    assignment_status: 'issued',
+                    issued_soldier_id: conflict.soldierId,
+                    issued_soldier_name: conflict.soldierName
+                });
+                updated++;
+            }
+            alert(`Successfully updated ${updated} weapon(s) to issued status.`);
+            setTodayWeaponConflicts([]);
+            await scanForTodayWeaponConflicts();
+        } catch (error) {
+            console.error("Error bulk assigning weapons:", error);
+            alert(`Updated ${updated} weapon(s) before error. Check console.`);
+            await scanForTodayWeaponConflicts();
+        } finally {
+            setAssigningWeapons(false);
+        }
+    };
 
     const scanForConflicts = async () => {
         setConflictStatus('scanning');
@@ -268,6 +356,53 @@ export default function DataHealth() {
                         <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
                     </div>
                 </div>
+
+                {/* Today's Weapon Conflict Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <AlertCircle className="w-5 h-5 text-blue-600"/>
+                           Today's Weapon Assignment Sync
+                        </CardTitle>
+                        <CardDescription>Find soldiers assigned equipment today with weapons still in storage, and bulk issue those weapons.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {todayWeaponStatus === 'idle' && (
+                            <Button onClick={scanForTodayWeaponConflicts} variant="outline">Scan Today's Assignments</Button>
+                        )}
+                        {todayWeaponStatus === 'scanning' && (
+                           <p className="text-slate-600">Scanning... Please wait.</p>
+                        )}
+                        {todayWeaponStatus === 'complete' && (
+                             <div className="space-y-4">
+                                 {todayWeaponConflicts.length === 0 ? (
+                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                 ) : (
+                                     <div>
+                                        <p className="text-blue-600 font-semibold mb-4">{todayWeaponConflicts.length} weapon(s) assigned today but still marked as storage:</p>
+                                        <div className="space-y-2 mb-4 max-h-48 overflow-y-auto border rounded-lg p-3 bg-blue-50">
+                                            {todayWeaponConflicts.map((conflict, idx) => (
+                                                <div key={idx} className="bg-white p-2 rounded text-sm">
+                                                    <p><strong>{conflict.equipmentId}</strong> ({conflict.equipmentName}) → {conflict.soldierName} ({conflict.soldierId})</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <Button 
+                                            onClick={bulkAssignWeapons} 
+                                            disabled={assigningWeapons}
+                                            className="bg-blue-600 hover:bg-blue-700"
+                                        >
+                                            {assigningWeapons ? 'Updating...' : `Bulk Assign ${todayWeaponConflicts.length} Weapon(s)`}
+                                        </Button>
+                                     </div>
+                                 )}
+                            </div>
+                        )}
+                        {todayWeaponStatus === 'error' && (
+                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Conflict Detection Card */}
                 <Card className="mb-6">
