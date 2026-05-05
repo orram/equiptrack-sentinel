@@ -197,8 +197,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
     return <p className="text-center text-slate-500 py-10">{strings.noData}</p>;
   }
 
-  // For LTR sticky grand total: each sub-col is ~60px wide, rightmost (index 3) = 0px
-  const grandTotalRightOffset = (index) => `${(subHeaders.length - 1 - index) * 60}px`;
+
 
   return (
     <div className="w-full border rounded-lg overflow-x-auto" dir={dir}>
@@ -233,8 +232,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
             {subHeaders.map((sub, index) => (
               <TableHead
                 key={`grand-total-${sub}`}
-                className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l ${!isHe ? 'sticky z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
-                style={!isHe ? { right: grandTotalRightOffset(index) } : {}}
+                className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
               >
                 {sub}
               </TableHead>
@@ -264,8 +262,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               {subHeaders.map((sub, index) => (
                 <TableCell
                   key={`${type}-grand-total-${sub}`}
-                  className={`text-center font-semibold bg-slate-100 border-l ${!isHe ? 'sticky z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
-                  style={!isHe ? { right: grandTotalRightOffset(index) } : {}}
+                  className={`text-center font-semibold bg-slate-100 border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
                 >
                   {tableData[type]?.grandTotal?.[dataKeys[index]] || 0}
                 </TableCell>
@@ -295,8 +292,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
             {subHeaders.map((sub, index) => (
               <TableCell
                 key={`total-grand-total-${sub}`}
-                className={`text-center bg-slate-900 text-white border-l ${!isHe ? 'sticky z-10' : ''} ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
-                style={!isHe ? { right: grandTotalRightOffset(index) } : {}}
+                className={`text-center bg-slate-900 text-white border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
               >
                 {grandTotal?.[dataKeys[index]] || 0}
               </TableCell>
