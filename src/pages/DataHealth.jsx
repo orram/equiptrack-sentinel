@@ -21,13 +21,16 @@ export default function DataHealth() {
     const [migrationResults, setMigrationResults] = useState({ scanned: 0, updated: 0, errors: 0 });
     const [duplicateStatus, setDuplicateStatus] = useState('idle'); // idle, scanning, complete
     const [duplicates, setDuplicates] = useState([]);
+    const [sameSoldierDuplicates, setSameSoldierDuplicates] = useState([]);
     const [selectedDuplicate, setSelectedDuplicate] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [assignmentToDelete, setAssignmentToDelete] = useState(null);
+    const [bulkRemoving, setBulkRemoving] = useState(false);
 
     const scanForDuplicates = async () => {
         setDuplicateStatus('scanning');
         setDuplicates([]);
+        setSameSoldierDuplicates([]);
         try {
             const allAssignments = await Assignment.filter({ status: "active" });
             const equipmentMap = {};
@@ -49,7 +52,34 @@ export default function DataHealth() {
                     assignments: assignments.sort((a, b) => new Date(b.assignment_date) - new Date(a.assignment_date))
                 }));
 
+            // Find duplicates where same soldier is assigned to same equipment on same day
+            const sameSoldierDups = [];
+            foundDuplicates.forEach(dup => {
+                const groupedBySoldierDate = {};
+                dup.assignments.forEach(assignment => {
+                    const key = `${assignment.soldier_id}|${assignment.assignment_date}`;
+                    if (!groupedBySoldierDate[key]) {
+                        groupedBySoldierDate[key] = [];
+                    }
+                    groupedBySoldierDate[key].push(assignment);
+                });
+
+                // Find groups with more than one assignment
+                Object.entries(groupedBySoldierDate).forEach(([key, assignments]) => {
+                    if (assignments.length > 1) {
+                        sameSoldierDups.push({
+                            equipmentId: dup.equipmentId,
+                            soldierName: assignments[0].soldier_name,
+                            soldierId: assignments[0].soldier_id,
+                            assignmentDate: assignments[0].assignment_date,
+                            assignments: assignments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+                        });
+                    }
+                });
+            });
+
             setDuplicates(foundDuplicates);
+            setSameSoldierDuplicates(sameSoldierDups);
             setDuplicateStatus('complete');
         } catch (error) {
             console.error("Error scanning for duplicates:", error);
@@ -67,6 +97,33 @@ export default function DataHealth() {
         } catch (error) {
             console.error("Error deleting assignment:", error);
             alert("Failed to mark assignment as returned. Please try again.");
+        }
+    };
+
+    const handleBulkRemoveSameSoldier = async () => {
+        if (sameSoldierDuplicates.length === 0) return;
+        if (!confirm(`This will remove ${sameSoldierDuplicates.reduce((sum, dup) => sum + (dup.assignments.length - 1), 0)} duplicate assignments (keeping the latest for each). Continue?`)) {
+            return;
+        }
+
+        setBulkRemoving(true);
+        let removed = 0;
+        try {
+            for (const dup of sameSoldierDuplicates) {
+                // Keep the latest (first) assignment, remove the rest
+                for (let i = 1; i < dup.assignments.length; i++) {
+                    await Assignment.update(dup.assignments[i].id, { status: 'returned' });
+                    removed++;
+                }
+            }
+            alert(`Successfully removed ${removed} duplicate assignment(s).`);
+            await scanForDuplicates();
+        } catch (error) {
+            console.error("Error bulk removing assignments:", error);
+            alert(`Removed ${removed} duplicate(s) before error. Check console.`);
+            await scanForDuplicates();
+        } finally {
+            setBulkRemoving(false);
         }
     };
 
@@ -150,11 +207,29 @@ export default function DataHealth() {
                            <p className="text-slate-600">Scanning... Please wait.</p>
                         )}
                         {duplicateStatus === 'complete' && (
-                            <div className="space-y-4">
-                                {duplicates.length === 0 ? (
-                                    <p className="text-green-600 font-semibold">✓ No duplicates found!</p>
-                                ) : (
-                                    <div>
+                             <div className="space-y-4">
+                                 {duplicates.length === 0 ? (
+                                     <p className="text-green-600 font-semibold">✓ No duplicates found!</p>
+                                 ) : (
+                                     <div>
+                                         {sameSoldierDuplicates.length > 0 && (
+                                             <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
+                                                 <p className="font-semibold text-yellow-800 mb-3">
+                                                     Found {sameSoldierDuplicates.length} case(s) with same soldier assigned on same day:
+                                                 </p>
+                                                 <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+                                                     {sameSoldierDuplicates.map((dup, idx) => (
+                                                         <div key={idx} className="bg-white p-2 rounded text-sm">
+                                                             <p><strong>{dup.equipmentId}</strong> → {dup.soldierName} ({dup.soldierId}) on {new Date(dup.assignmentDate).toLocaleDateString()} ({dup.assignments.length} copies)</p>
+                                                         </div>
+                                                     ))}
+                                                 </div>
+                                                 <Button onClick={handleBulkRemoveSameSoldier} disabled={bulkRemoving} className="bg-yellow-600 hover:bg-yellow-700">
+                                                     {bulkRemoving ? 'Removing...' : `Bulk Remove (${sameSoldierDuplicates.reduce((sum, dup) => sum + (dup.assignments.length - 1), 0)} items)`}
+                                                 </Button>
+                                             </div>
+                                         )}
+                                         <div>
                                         <p className="text-red-600 font-semibold mb-4">{duplicates.length} equipment item(s) with duplicate assignments:</p>
                                         <div className="space-y-3">
                                             {duplicates.map((dup) => (
@@ -201,11 +276,12 @@ export default function DataHealth() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <Button onClick={scanForDuplicates} variant="outline" className="mt-4">Rescan</Button>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                         </div>
+                                         <Button onClick={scanForDuplicates} variant="outline" className="mt-4">Rescan</Button>
+                                        </div>
+                                        )}
+                                        </div>
+                                        )}
                         {duplicateStatus === 'error' && (
                            <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
                         )}
