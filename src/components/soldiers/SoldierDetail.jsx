@@ -56,11 +56,11 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
         <div className="space-y-2 text-sm text-slate-600 mb-6">
           <div className="flex items-center gap-2">
             <Mail className="w-4 h-4" />
-            <span>{soldier.email || "No email"}</span>
+            <span>{soldier.email || t?.noEmail || "No email"}</span>
           </div>
           <div className="flex items-center gap-2">
             <Phone className="w-4 h-4" />
-            <span>{soldier.phone || "No phone"}</span>
+            <span>{soldier.phone || t?.noPhone || "No phone"}</span>
           </div>
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4" />

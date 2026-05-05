@@ -31,7 +31,7 @@ export default function AddSoldierModal({ onComplete, onClose }) {
       onComplete(soldierData);
     } catch (error) {
       console.error("Error creating soldier:", error);
-      alert("Error creating soldier. Please try again.");
+      alert(t.errorCreatingSoldier);
     }
     
     setIsProcessing(false);
@@ -127,9 +127,9 @@ export default function AddSoldierModal({ onComplete, onClose }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="transferred">Transferred</SelectItem>
-                <SelectItem value="discharged">Discharged</SelectItem>
+                <SelectItem value="active">{t.statusActive}</SelectItem>
+                <SelectItem value="transferred">{t.statusTransferred}</SelectItem>
+                <SelectItem value="discharged">{t.statusDischarged}</SelectItem>
               </SelectContent>
             </Select>
           </div>

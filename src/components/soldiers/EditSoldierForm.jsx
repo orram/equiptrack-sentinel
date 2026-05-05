@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Soldier } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +28,7 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
       onSave();
     } catch (error)      {
       console.error("Error updating soldier:", error);
-      alert("Error updating soldier. Please try again.");
+      alert(t.errorUpdatingSoldier);
     }
     setIsProcessing(false);
   };
@@ -119,9 +118,9 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="transferred">Transferred</SelectItem>
-                <SelectItem value="discharged">Discharged</SelectItem>
+                <SelectItem value="active">{t.statusActive}</SelectItem>
+                <SelectItem value="transferred">{t.statusTransferred}</SelectItem>
+                <SelectItem value="discharged">{t.statusDischarged}</SelectItem>
               </SelectContent>
             </Select>
           </div>

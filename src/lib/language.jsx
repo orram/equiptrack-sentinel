@@ -197,6 +197,13 @@ export const translations = {
     createSoldier: "Create Soldier",
     cannotDeleteSoldierHasEquipment: (name, count) => `Cannot delete ${name}. This soldier has ${count} active equipment item(s). Please return all equipment before deleting.`,
     confirmDeleteSoldier: (name) => `Are you sure you want to delete ${name}? This cannot be undone.`,
+    errorUpdatingSoldier: "Error updating soldier. Please try again.",
+    errorCreatingSoldier: "Error creating soldier. Please try again.",
+    statusActive: "Active",
+    statusTransferred: "Transferred",
+    statusDischarged: "Discharged",
+    noEmail: "No email",
+    noPhone: "No phone",
   },
   he: {
     dashboard: "לוח בקרה",
@@ -385,6 +392,13 @@ export const translations = {
     createSoldier: "צור חייל",
     cannotDeleteSoldierHasEquipment: (name, count) => `לא ניתן למחוק את ${name}. לחייל זה יש ${count} פריטי ציוד פעילים. יש להחזיר את כל הציוד לפני המחיקה.`,
     confirmDeleteSoldier: (name) => `האם אתה בטוח שברצונך למחוק את ${name}? פעולה זו אינה ניתנת לביטול.`,
+    errorUpdatingSoldier: "שגיאה בעדכון החייל. אנא נסה שוב.",
+    errorCreatingSoldier: "שגיאה ביצירת החייל. אנא נסה שוב.",
+    statusActive: "פעיל",
+    statusTransferred: "הועבר",
+    statusDischarged: "שוחרר",
+    noEmail: "אין אימייל",
+    noPhone: "אין טלפון",
   }
 };
 
