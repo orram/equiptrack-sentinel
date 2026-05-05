@@ -228,6 +228,8 @@ export const translations = {
     availableInventory: "Available Inventory",
     searchItemOrSerial: "Item name / serial number",
     searchSoldierNameOrId: "Soldier name / ID",
+    soldierNotFound: "Soldier not found?",
+    searchEquipmentBySN: "Search Equipment by Serial Number",
   },
   he: {
     dashboard: "לוח בקרה",
@@ -447,6 +449,8 @@ export const translations = {
     availableInventory: "מלאי זמין",
     searchItemOrSerial: "שם פריט / מספר סידורי",
     searchSoldierNameOrId: "שם חייל / מ.א",
+    soldierNotFound: "חייל לא נמצא?",
+    searchEquipmentBySN: "חפש ציוד לפי מספר סידורי",
   }
 };
 
