@@ -28,6 +28,45 @@ export default function DataHealth() {
     const [assignmentToDelete, setAssignmentToDelete] = useState(null);
     const [bulkRemoving, setBulkRemoving] = useState(false);
     const [selectedForRemoval, setSelectedForRemoval] = useState(new Set());
+    const [conflictStatus, setConflictStatus] = useState('idle'); // idle, scanning, complete
+    const [conflicts, setConflicts] = useState([]);
+
+    const scanForConflicts = async () => {
+        setConflictStatus('scanning');
+        setConflicts([]);
+        try {
+            const allEquipment = await Equipment.list();
+            const activeAssignments = await Assignment.filter({ status: "active" });
+            
+            const foundConflicts = [];
+            allEquipment.forEach(item => {
+                // Check if equipment is marked as 'storage' but has an active assignment
+                if (item.assignment_status === 'storage') {
+                    const activeAssignment = activeAssignments.find(a => 
+                        a.equipment_id === item.serial_number &&
+                        (!a.assignment_type || a.assignment_type === 'serialized')
+                    );
+                    if (activeAssignment) {
+                        foundConflicts.push({
+                            equipmentId: item.serial_number,
+                            equipmentName: item.object_name,
+                            markedAs: 'storage',
+                            activeSoldier: activeAssignment.soldier_name,
+                            activeSoldierId: activeAssignment.soldier_id,
+                            assignmentId: activeAssignment.id,
+                            equipmentId: item.id
+                        });
+                    }
+                }
+            });
+            
+            setConflicts(foundConflicts);
+            setConflictStatus('complete');
+        } catch (error) {
+            console.error("Error scanning for conflicts:", error);
+            setConflictStatus('error');
+        }
+    };
 
     const scanForDuplicates = async () => {
         setDuplicateStatus('scanning');
@@ -229,6 +268,62 @@ export default function DataHealth() {
                         <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
                     </div>
                 </div>
+
+                {/* Conflict Detection Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <AlertCircle className="w-5 h-5 text-orange-600"/>
+                           Storage vs Active Conflict Detection
+                        </CardTitle>
+                        <CardDescription>Find equipment marked as "storage" but assigned to active soldiers.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {conflictStatus === 'idle' && (
+                            <Button onClick={scanForConflicts} variant="outline">Scan for Conflicts</Button>
+                        )}
+                        {conflictStatus === 'scanning' && (
+                           <p className="text-slate-600">Scanning... Please wait.</p>
+                        )}
+                        {conflictStatus === 'complete' && (
+                             <div className="space-y-4">
+                                 {conflicts.length === 0 ? (
+                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                 ) : (
+                                     <div>
+                                        <p className="text-orange-600 font-semibold mb-4">{conflicts.length} item(s) marked as storage but actively assigned:</p>
+                                        <div className="space-y-3">
+                                            {conflicts.map((conflict) => (
+                                                <div key={conflict.equipmentId} className="border rounded-lg p-4 bg-orange-50">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <p className="font-semibold text-slate-900">{conflict.equipmentId}</p>
+                                                            <p className="text-sm text-slate-600">{conflict.equipmentName}</p>
+                                                            <p className="text-sm text-orange-600 mt-2">Assigned to: {conflict.activeSoldier} ({conflict.activeSoldierId})</p>
+                                                        </div>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setAssignmentToDelete({...conflict, status: 'active'});
+                                                                setDeleteDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            Mark as Returned
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <Button onClick={scanForConflicts} variant="outline" className="mt-4">Rescan</Button>
+                                     </div>
+                                 )}
+                            </div>
+                        )}
+                        {conflictStatus === 'error' && (
+                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Duplicate Detection Card */}
                 <Card className="mb-6">
