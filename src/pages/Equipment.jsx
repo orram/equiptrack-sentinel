@@ -7,12 +7,20 @@ import { Input } from "@/components/ui/input";
 import {
   Search,
   Plus,
-  Download, // Add Download icon
+  Download,
   Trash2,
   ChevronDown,
   ChevronUp,
   AlertTriangle
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import EquipmentList from "../components/equipment/EquipmentList";
 import EquipmentFilters from "../components/equipment/EquipmentFilters";
@@ -41,6 +49,9 @@ export default function EquipmentPage() {
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [equipmentToDelete, setEquipmentToDelete] = useState(null);
 
   const loadData = useCallback(async (retryCount = 0) => {
     const MAX_RETRIES = 2;
@@ -207,6 +218,27 @@ export default function EquipmentPage() {
     loadData();
   };
 
+  const handleDeleteEquipment = (item) => {
+    setEquipmentToDelete(item);
+    setDeleteReason("");
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!equipmentToDelete) return;
+
+    try {
+      await Equipment.delete(equipmentToDelete.id);
+      setShowDeleteDialog(false);
+      setEquipmentToDelete(null);
+      setDeleteReason("");
+      loadData();
+    } catch (error) {
+      console.error("Error deleting equipment:", error);
+      alert("Failed to delete equipment. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="p-6 max-w-7xl mx-auto">
@@ -266,6 +298,7 @@ export default function EquipmentPage() {
               isLoading={isLoading}
               onIssueEquipment={handleIssueEquipment}
               onViewDetails={setSelectedEquipment}
+              onDeleteEquipment={handleDeleteEquipment}
               t={t}
             />
           </div>
@@ -427,6 +460,52 @@ export default function EquipmentPage() {
             t={t}
           />
         )}
+
+        {/* Delete Equipment Dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                Delete Equipment
+              </DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. The equipment record will be moved to the archive.
+              </DialogDescription>
+            </DialogHeader>
+            {equipmentToDelete && (
+              <div className="space-y-4">
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                  <p className="text-sm font-medium text-slate-700">
+                    <span className="font-semibold">{equipmentToDelete.serial_number}</span> - {equipmentToDelete.object_name}
+                  </p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Status: <span className="font-medium">{equipmentToDelete.assignment_status}</span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700">Deletion Reason (optional)</label>
+                  <textarea
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    placeholder="Why is this equipment being deleted?"
+                    className="w-full mt-2 p-2 border rounded-lg text-sm"
+                    rows="3"
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDelete}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Equipment
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

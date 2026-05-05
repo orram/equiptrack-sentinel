@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, User, MapPin, MoreVertical, Users, Check } from "lucide-react";
+import { Package, User, MapPin, MoreVertical, Users, Check, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusColors = {
@@ -19,7 +18,7 @@ const conditionColors = {
   poor: "bg-red-100 text-red-800"
 };
 
-export default function EquipmentList({ equipment, isLoading, onIssueEquipment, onViewDetails, t }) {
+export default function EquipmentList({ equipment, isLoading, onIssueEquipment, onViewDetails, onDeleteEquipment, t }) {
   return (
     <Card>
       <CardHeader>
@@ -109,6 +108,14 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" onClick={() => onViewDetails(item)}>
                       <MoreVertical className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onDeleteEquipment(item)}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {t.delete}
                     </Button>
                     <Button
                       size="sm"
