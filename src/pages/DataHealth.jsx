@@ -43,29 +43,40 @@ export default function DataHealth() {
             const allAssignments = await Assignment.list();
             const today = new Date().toISOString().split('T')[0];
             
-            // Find all active assignments created today (serialized equipment only)
-            const todayActiveAssignments = allAssignments.filter(a => 
-                a.assignment_date === today && 
-                a.status === 'active' &&
-                (!a.assignment_type || a.assignment_type === 'serialized')
+            // Find all soldiers assigned equipment today
+            const soldiersAssignedToday = new Set(
+                allAssignments
+                    .filter(a => a.assignment_date === today && a.status === 'active')
+                    .map(a => a.soldier_id)
             );
             
             const foundConflicts = [];
             
-            // For each active assignment from today, check if equipment is in storage
-            todayActiveAssignments.forEach(assignment => {
-                const equipment = allEquipment.find(e => e.serial_number === assignment.equipment_id);
+            // For each soldier assigned today, find their OTHER equipment that is in storage but has active assignments
+            soldiersAssignedToday.forEach(soldierId => {
+                // Get all active assignments for this soldier
+                const allSoldierAssignments = allAssignments.filter(a => 
+                    a.soldier_id === soldierId && 
+                    a.status === 'active' &&
+                    (!a.assignment_type || a.assignment_type === 'serialized')
+                );
                 
-                if (equipment && equipment.assignment_status === 'storage') {
-                    foundConflicts.push({
-                        equipmentId: equipment.serial_number,
-                        equipmentName: equipment.object_name,
-                        soldierId: assignment.soldier_id,
-                        soldierName: assignment.soldier_name,
-                        equipmentDbId: equipment.id,
-                        assignmentId: assignment.id
-                    });
-                }
+                // Check each assignment to see if equipment is in storage
+                allSoldierAssignments.forEach(assignment => {
+                    const equipment = allEquipment.find(e => e.serial_number === assignment.equipment_id);
+                    
+                    if (equipment && equipment.assignment_status === 'storage') {
+                        foundConflicts.push({
+                            equipmentId: equipment.serial_number,
+                            equipmentName: equipment.object_name,
+                            soldierId: soldierId,
+                            soldierName: assignment.soldier_name,
+                            equipmentDbId: equipment.id,
+                            assignmentId: assignment.id,
+                            assignmentDate: assignment.assignment_date
+                        });
+                    }
+                });
             });
             
             setTodayWeaponConflicts(foundConflicts);
