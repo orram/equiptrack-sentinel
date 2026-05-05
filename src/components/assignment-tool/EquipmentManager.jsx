@@ -334,12 +334,28 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     setIsProcessing(true);
     try {
       for (const item of itemsToAssign) {
+        const equipmentId = item.assignment_type === 'inventory' ? item.object_name : item.serial_number;
+        const todayDate = new Date().toISOString().split('T')[0];
+
+        // Check for duplicate assignment created on the same day for same equipment/soldier
+        const existingDuplicate = allAssignments.find(a =>
+          a.equipment_id === equipmentId &&
+          a.soldier_id === soldier.soldier_id &&
+          a.assignment_date === todayDate &&
+          a.status === 'active'
+        );
+
+        if (existingDuplicate) {
+          console.warn(`Duplicate assignment detected for ${equipmentId} to ${soldier.full_name}. Skipping.`);
+          continue; // Skip this item to prevent duplicate
+        }
+
         const assignmentData = {
           assignment_type: item.assignment_type || 'serialized',
-          equipment_id: item.assignment_type === 'inventory' ? item.object_name : item.serial_number,
+          equipment_id: equipmentId,
           soldier_id: soldier.soldier_id,
           soldier_name: soldier.full_name,
-          assignment_date: new Date().toISOString().split('T')[0],
+          assignment_date: todayDate,
           status: "active",
           quantity: item.quantity || 1,
           condition_on_assignment: item.condition || "good",
