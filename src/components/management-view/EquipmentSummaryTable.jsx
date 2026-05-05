@@ -223,7 +223,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                   key={`${platoon}-${sub}`}
                   className={`text-center text-xs font-medium ${
                     isHe
-                      ? index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
+                      ? index === 0 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
                       : index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                   }`}
                 >
@@ -254,7 +254,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       key={`${type}-${platoon}-${sub}`}
                       className={`text-center ${
                         isHe
-                          ? index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
+                          ? index === 0 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
                           : index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                       }`}
                     >
@@ -286,7 +286,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                     key={`total-${platoon}-${sub}`}
                     className={`text-center font-bold ${
                       isHe
-                        ? index === subHeaders.length - 1 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
+                        ? index === 0 ? 'border-r-2 border-slate-400' : 'border-l border-slate-200'
                         : index === 0 ? 'border-l-2 border-slate-400' : 'border-l border-slate-200'
                     }`}
                   >
