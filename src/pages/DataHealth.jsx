@@ -3,7 +3,8 @@ import { Equipment, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, DatabaseZap, AlertCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, DatabaseZap, AlertCircle, Trash2, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -26,6 +27,7 @@ export default function DataHealth() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [assignmentToDelete, setAssignmentToDelete] = useState(null);
     const [bulkRemoving, setBulkRemoving] = useState(false);
+    const [selectedForRemoval, setSelectedForRemoval] = useState(new Set());
 
     const scanForDuplicates = async () => {
         setDuplicateStatus('scanning');
@@ -117,6 +119,7 @@ export default function DataHealth() {
                 }
             }
             alert(`Successfully removed ${removed} duplicate assignment(s).`);
+            setSelectedForRemoval(new Set());
             await scanForDuplicates();
         } catch (error) {
             console.error("Error bulk removing assignments:", error);
@@ -125,6 +128,41 @@ export default function DataHealth() {
         } finally {
             setBulkRemoving(false);
         }
+    };
+
+    const handleRemoveSelected = async () => {
+        if (selectedForRemoval.size === 0) return;
+        if (!confirm(`Remove ${selectedForRemoval.size} selected duplicate(s)?`)) {
+            return;
+        }
+
+        setBulkRemoving(true);
+        let removed = 0;
+        try {
+            for (const assignmentId of selectedForRemoval) {
+                await Assignment.update(assignmentId, { status: 'returned' });
+                removed++;
+            }
+            alert(`Successfully removed ${removed} duplicate assignment(s).`);
+            setSelectedForRemoval(new Set());
+            await scanForDuplicates();
+        } catch (error) {
+            console.error("Error removing selected assignments:", error);
+            alert(`Removed ${removed} duplicate(s) before error. Check console.`);
+            await scanForDuplicates();
+        } finally {
+            setBulkRemoving(false);
+        }
+    };
+
+    const toggleSelectAssignment = (assignmentId) => {
+        const newSelected = new Set(selectedForRemoval);
+        if (newSelected.has(assignmentId)) {
+            newSelected.delete(assignmentId);
+        } else {
+            newSelected.add(assignmentId);
+        }
+        setSelectedForRemoval(newSelected);
     };
 
     const runEquipmentMigration = async () => {
@@ -252,9 +290,17 @@ export default function DataHealth() {
                                                         <div className="space-y-2 pt-3 border-t">
                                                             {dup.assignments.map((assignment, idx) => (
                                                                 <div key={assignment.id} className="flex justify-between items-center bg-white p-3 rounded border">
-                                                                    <div className="flex-1">
-                                                                        <p className="text-sm font-medium">{idx === 0 ? '(Latest) ' : ''}{assignment.soldier_name} ({assignment.soldier_id})</p>
-                                                                        <p className="text-xs text-slate-500">Assigned: {new Date(assignment.assignment_date).toLocaleDateString()}</p>
+                                                                    <div className="flex items-center gap-3 flex-1">
+                                                                        {idx !== 0 && (
+                                                                            <Checkbox
+                                                                                checked={selectedForRemoval.has(assignment.id)}
+                                                                                onCheckedChange={() => toggleSelectAssignment(assignment.id)}
+                                                                            />
+                                                                        )}
+                                                                        <div className={idx === 0 ? 'opacity-60' : ''}>
+                                                                            <p className="text-sm font-medium">{idx === 0 ? '(Latest) ' : ''}{assignment.soldier_name} ({assignment.soldier_id})</p>
+                                                                            <p className="text-xs text-slate-500">Assigned: {new Date(assignment.assignment_date).toLocaleDateString()}</p>
+                                                                        </div>
                                                                     </div>
                                                                     {idx !== 0 && (
                                                                         <Button
@@ -276,6 +322,15 @@ export default function DataHealth() {
                                                 </div>
                                             ))}
                                         </div>
+                                         {selectedForRemoval.size > 0 && (
+                                             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-300">
+                                                 <p className="text-sm font-medium text-blue-800 mb-3">{selectedForRemoval.size} duplicate(s) selected for removal</p>
+                                                 <Button onClick={handleRemoveSelected} disabled={bulkRemoving} className="w-full bg-red-600 hover:bg-red-700">
+                                                     <Trash2 className="w-4 h-4 mr-2" />
+                                                     {bulkRemoving ? 'Removing...' : 'Remove Selected'}
+                                                 </Button>
+                                             </div>
+                                         )}
                                          </div>
                                          <Button onClick={scanForDuplicates} variant="outline" className="mt-4">Rescan</Button>
                                         </div>
