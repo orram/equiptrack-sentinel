@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Soldier } from "@/entities/all";
+import { Soldier, Equipment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,27 @@ export default function SoldierDetailsEdit({ soldier, onSave, onBack, t }) {
     setIsProcessing(true);
     try {
       await Soldier.update(soldier.id, soldierData);
-      onSave(soldierData); // Pass updated data back to parent
+
+      // Sync platoon/squad/name on all equipment currently issued to this soldier
+      const platoonChanged = soldierData.platoon !== soldier.platoon;
+      const squadChanged = soldierData.squad !== soldier.squad;
+      const nameChanged = soldierData.full_name !== soldier.full_name;
+      const idChanged2 = soldierData.soldier_id !== soldier.soldier_id;
+
+      if (platoonChanged || squadChanged || nameChanged || idChanged2) {
+        const allEquipment = await Equipment.filter({ issued_soldier_id: soldier.soldier_id });
+        const updatePayload = {};
+        if (platoonChanged) updatePayload.platoon = soldierData.platoon;
+        if (squadChanged) updatePayload.squad = soldierData.squad;
+        if (nameChanged) updatePayload.issued_soldier_name = soldierData.full_name;
+        if (idChanged2) updatePayload.issued_soldier_id = soldierData.soldier_id;
+
+        for (const item of allEquipment) {
+          await Equipment.update(item.id, updatePayload);
+        }
+      }
+
+      onSave(soldierData);
     } catch (error) {
       console.error("Error updating soldier:", error);
       alert(t.errorUpdatingData || "Error updating soldier. Please try again.");
