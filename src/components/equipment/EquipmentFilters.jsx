@@ -1,6 +1,8 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Filter } from "lucide-react";
+import { Filter, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function EquipmentFilters({ filters, onFilterChange, equipment, t }) {
   const platoons = [...new Set(equipment.map(e => e.platoon).filter(Boolean))];
@@ -10,7 +12,7 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
   const hasNoPlatoonItems = equipment.some(e => !e.platoon);
   
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap gap-3 items-end">
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-slate-400" />
         <Select 
@@ -77,6 +79,28 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
           <SelectItem value="poor">Poor</SelectItem>
         </SelectContent>
       </Select>
+
+      <div className="flex items-center gap-2 border-l pl-3">
+        <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-slate-500">Changed from</Label>
+          <Input
+            type="date"
+            value={filters.dateFrom || ""}
+            onChange={(e) => onFilterChange({ ...filters, dateFrom: e.target.value })}
+            className="w-36 h-8 text-xs"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-slate-500">Changed to</Label>
+          <Input
+            type="date"
+            value={filters.dateTo || ""}
+            onChange={(e) => onFilterChange({ ...filters, dateTo: e.target.value })}
+            className="w-36 h-8 text-xs"
+          />
+        </div>
+      </div>
     </div>
   );
 }

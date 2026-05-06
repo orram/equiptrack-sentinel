@@ -28,11 +28,13 @@ import EquipmentDetail from "../components/equipment/EquipmentDetail";
 import AssignmentModal from "../components/equipment/AssignmentModal";
 import AddEquipmentModal from "../components/equipment/AddEquipmentModal";
 import { useLanguage } from "@/lib/language";
+import { Assignment } from "@/entities/all";
 
 export default function EquipmentPage() {
   const { t } = useLanguage();
   const [equipment, setEquipment] = useState([]);
   const [soldiers, setSoldiers] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [oldEquipment, setOldEquipment] = useState([]);
   // const [assignments, setAssignments] = useState([]); // This is no longer needed here
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +46,9 @@ export default function EquipmentPage() {
     status: "all",
     platoon: "all",
     squad: "all",
-    condition: "all"
+    condition: "all",
+    dateFrom: "",
+    dateTo: ""
   });
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -61,14 +65,15 @@ export default function EquipmentPage() {
     
     try {
       console.log("Loading equipment data...");
-      const equipmentData = await Equipment.list("-created_date");
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log("Loading soldier data...");
-      const soldierData = await Soldier.list("-created_date");
+      const [equipmentData, soldierData, assignmentData] = await Promise.all([
+        Equipment.list("-created_date"),
+        Soldier.list("-created_date"),
+        Assignment.list("-updated_date"),
+      ]);
 
       setEquipment(equipmentData);
       setSoldiers(soldierData);
+      setAssignments(assignmentData);
       console.log("Equipment page data loaded successfully");
       
     } catch (error) {
@@ -122,14 +127,27 @@ export default function EquipmentPage() {
 
     const matchesStatus = filters.status === "all" || item.assignment_status === filters.status;
     
-    // Updated platoon filtering to handle "no_platoon" option
     const matchesPlatoon = filters.platoon === "all" || 
                           (filters.platoon === "no_platoon" ? !item.platoon : item.platoon === filters.platoon);
     
     const matchesSquad = filters.squad === "all" || item.squad === filters.squad;
     const matchesCondition = filters.condition === "all" || item.condition === filters.condition;
 
-    return matchesSearch && matchesStatus && matchesPlatoon && matchesSquad && matchesCondition;
+    let matchesDate = true;
+    if (filters.dateFrom || filters.dateTo) {
+      // Find any assignment for this equipment that falls in the date range
+      const itemAssignments = assignments.filter(a => a.equipment_id === item.serial_number);
+      matchesDate = itemAssignments.some(a => {
+        const dates = [a.assignment_date, a.return_date].filter(Boolean);
+        return dates.some(d => {
+          if (filters.dateFrom && d < filters.dateFrom) return false;
+          if (filters.dateTo && d > filters.dateTo) return false;
+          return true;
+        });
+      });
+    }
+
+    return matchesSearch && matchesStatus && matchesPlatoon && matchesSquad && matchesCondition && matchesDate;
   });
 
   const filteredDeletedEquipment = oldEquipment.filter(item => {
