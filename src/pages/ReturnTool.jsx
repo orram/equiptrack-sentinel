@@ -412,6 +412,9 @@ export default function ReturnTool() {
                       <span className="truncate">{t.issuedTo}: {item.soldier?.full_name || item.assignment.soldier_name}</span>
                       <span>{t.platoon}: {item.soldier?.platoon}</span>
                       <span>{t.condition}: {item.itemDetails.condition || t.good}</span>
+                      {item.assignment.assignment_date && (
+                        <span>Assigned: {item.assignment.assignment_date}</span>
+                      )}
                     </div>
 
                     {item.assignment?.signature_data?.supplanting_items?.length > 0 && (
