@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Equipment, Assignment, Soldier } from "@/entities/all";
+import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,50 @@ export default function DataHealth() {
     const [weekWeaponConflicts, setWeekWeaponConflicts] = useState([]);
     const [selectedWeekWeapons, setSelectedWeekWeapons] = useState(new Set());
     const [assigningWeekWeapons, setAssigningWeekWeapons] = useState(false);
+    const [soldierSyncStatus, setSoldierSyncStatus] = useState('idle'); // idle, scanning, complete, error
+    const [soldierSyncResults, setSoldierSyncResults] = useState({ checked: 0, updated: 0, mismatches: [] });
+
+    const runSoldierInfoSync = async () => {
+        setSoldierSyncStatus('scanning');
+        setSoldierSyncResults({ checked: 0, updated: 0, mismatches: [] });
+        try {
+            const allEquipment = await Equipment.filter({ assignment_status: 'issued' });
+            const allSoldiers = await Soldier.list();
+            const soldierMap = {};
+            allSoldiers.forEach(s => { soldierMap[s.soldier_id] = s; });
+
+            let updated = 0;
+            const mismatches = [];
+
+            for (const item of allEquipment) {
+                if (!item.issued_soldier_id) continue;
+                const soldier = soldierMap[item.issued_soldier_id];
+                if (!soldier) continue;
+
+                const updatePayload = {};
+                if (item.issued_soldier_name !== soldier.full_name) updatePayload.issued_soldier_name = soldier.full_name;
+                if (item.platoon !== soldier.platoon) updatePayload.platoon = soldier.platoon;
+                if (item.squad !== soldier.squad) updatePayload.squad = soldier.squad;
+
+                if (Object.keys(updatePayload).length > 0) {
+                    mismatches.push({
+                        serial: item.serial_number,
+                        name: item.object_name,
+                        soldierName: soldier.full_name,
+                        changes: Object.keys(updatePayload).join(', ')
+                    });
+                    await Equipment.update(item.id, updatePayload);
+                    updated++;
+                }
+            }
+
+            setSoldierSyncResults({ checked: allEquipment.length, updated, mismatches });
+            setSoldierSyncStatus('complete');
+        } catch (error) {
+            console.error("Error syncing soldier info:", error);
+            setSoldierSyncStatus('error');
+        }
+    };
 
     const scanForLastWeekWeaponConflicts = async () => {
         setWeekWeaponStatus('scanning');
@@ -485,6 +530,51 @@ export default function DataHealth() {
                         <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
                     </div>
                 </div>
+
+                {/* Soldier Info Sync Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <RefreshCw className="w-5 h-5 text-teal-600"/>
+                            Soldier Info Sync
+                        </CardTitle>
+                        <CardDescription>Check all issued equipment and update soldier name, platoon, and squad if they don't match the soldier's current info.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {soldierSyncStatus === 'idle' && (
+                            <Button onClick={runSoldierInfoSync} variant="outline">Check & Update Equipment</Button>
+                        )}
+                        {soldierSyncStatus === 'scanning' && (
+                            <p className="text-slate-600">Scanning and updating... Please wait.</p>
+                        )}
+                        {soldierSyncStatus === 'complete' && (
+                            <div className="space-y-3">
+                                <div className="flex gap-4 text-sm">
+                                    <span className="text-slate-600">Checked: <strong>{soldierSyncResults.checked}</strong></span>
+                                    <span className={soldierSyncResults.updated > 0 ? "text-teal-700 font-semibold" : "text-green-600"}>
+                                        Updated: <strong>{soldierSyncResults.updated}</strong>
+                                    </span>
+                                </div>
+                                {soldierSyncResults.updated === 0 ? (
+                                    <p className="text-green-600 font-semibold">✓ All equipment info is up to date!</p>
+                                ) : (
+                                    <div className="border rounded-lg p-3 bg-teal-50 space-y-2 max-h-48 overflow-y-auto">
+                                        {soldierSyncResults.mismatches.map((m, i) => (
+                                            <div key={i} className="bg-white p-2 rounded border text-sm">
+                                                <p><strong>{m.serial}</strong> ({m.name}) → {m.soldierName}</p>
+                                                <p className="text-xs text-slate-500">Updated: {m.changes}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <Button onClick={runSoldierInfoSync} variant="outline" size="sm">Run Again</Button>
+                            </div>
+                        )}
+                        {soldierSyncStatus === 'error' && (
+                            <p className="font-semibold text-red-600">An error occurred. Check the console for details.</p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Last Week's Weapon Conflict Card */}
                 <Card className="mb-6">
