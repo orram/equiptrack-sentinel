@@ -249,8 +249,8 @@ export default function Layout({ children }) {
 
           <SidebarInset className="flex flex-col min-w-0">
             <header className="bg-white border-b border-slate-200 px-4 py-3 md:hidden">
-              <div className="flex items-center gap-4">
-                <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="hover:bg-slate-100 p-3 rounded-xl transition-colors duration-200 border border-slate-200 bg-slate-50 min-w-[44px] min-h-[44px] flex items-center justify-center" />
                 <h1 className="text-lg font-bold text-slate-900">{t.appName}</h1>
               </div>
             </header>
