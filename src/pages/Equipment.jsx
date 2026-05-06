@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Equipment, Soldier, OldEquipment } from "@/entities/all";
+import { Equipment, Soldier, OldEquipment, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,8 +33,8 @@ export default function EquipmentPage() {
   const { t } = useLanguage();
   const [equipment, setEquipment] = useState([]);
   const [soldiers, setSoldiers] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [oldEquipment, setOldEquipment] = useState([]);
-  // const [assignments, setAssignments] = useState([]); // This is no longer needed here
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDeleted, setIsLoadingDeleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,14 +61,15 @@ export default function EquipmentPage() {
     
     try {
       console.log("Loading equipment data...");
-      const equipmentData = await Equipment.list("-created_date");
-      
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log("Loading soldier data...");
-      const soldierData = await Soldier.list("-created_date");
+      const [equipmentData, soldierData, assignmentData] = await Promise.all([
+        Equipment.list("-created_date"),
+        Soldier.list("-created_date"),
+        Assignment.filter({ status: "active" }),
+      ]);
 
       setEquipment(equipmentData);
       setSoldiers(soldierData);
+      setAssignments(assignmentData);
       console.log("Equipment page data loaded successfully");
       
     } catch (error) {
@@ -151,7 +152,7 @@ export default function EquipmentPage() {
     const headers = [
       "Serial Number", "Object Name", "Status", "Condition", "Category", 
       "Platoon", "Squad", "Current Holder", "Holder ID", 
-      "Acquisition Date", "Last Maintenance", "Notes"
+      "Acquisition Date", "Last Maintenance", "Notes", "Assignment Date"
     ];
     
     const csvRows = [headers.join(',')];
@@ -181,6 +182,7 @@ export default function EquipmentPage() {
         escapeCsvCell(item.acquisition_date),
         escapeCsvCell(item.last_maintenance),
         escapeCsvCell(item.notes),
+        escapeCsvCell(assignments.find(a => a.equipment_id === item.serial_number)?.assignment_date || ''),
       ];
       csvRows.push(row.join(','));
     }
