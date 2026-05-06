@@ -20,7 +20,10 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
 
   const activeSerialized = activeAssignments
     .filter(a => !a.assignment_type || a.assignment_type === 'serialized')
-    .map(a => equipment.find(e => e?.serial_number === a?.equipment_id))
+    .map(a => {
+      const eq = equipment.find(e => e?.serial_number === a?.equipment_id);
+      return eq ? { ...eq, assignment_date: a.assignment_date } : null;
+    })
     .filter(Boolean);
     
   const activeInventory = activeAssignments
@@ -84,10 +87,15 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
             <div className="space-y-3">
               {/* Serialized Items */}
               {activeSerialized.map((item, index) => (
-                <div key={item?.id || `serialized-${index}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div key={item?.id || `serialized-${index}`} className="flex items-start justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-slate-500"/>
-                    <span className="font-medium text-sm">{item?.object_name || "Unknown Item"}</span>
+                    <Package className="w-4 h-4 text-slate-500 mt-0.5"/>
+                    <div>
+                      <span className="font-medium text-sm">{item?.object_name || "Unknown Item"}</span>
+                      {item?.assignment_date && (
+                        <p className="text-xs text-slate-400 mt-0.5">{item.assignment_date}</p>
+                      )}
+                    </div>
                   </div>
                   <code className="text-xs bg-slate-200 px-2 py-1 rounded">{item?.serial_number || "N/A"}</code>
                 </div>
