@@ -20,20 +20,41 @@ export default function AddSoldierModal({ onComplete, onClose }) {
     status: "active"
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [idWarning, setIdWarning] = useState(null); // null | {existingSoldier}
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
-    
+
     try {
+      // Check if soldier_id is already used
+      const existing = await Soldier.filter({ soldier_id: soldierData.soldier_id });
+      if (existing.length > 0) {
+        setIdWarning(existing[0]);
+        setIsProcessing(false);
+        return;
+      }
+
       await Soldier.create(soldierData);
-      // Pass the soldier data that was used to create the record
       onComplete(soldierData);
     } catch (error) {
       console.error("Error creating soldier:", error);
       alert(t.errorCreatingSoldier);
     }
-    
+
+    setIsProcessing(false);
+  };
+
+  const handleForceCreate = async () => {
+    setIdWarning(null);
+    setIsProcessing(true);
+    try {
+      await Soldier.create(soldierData);
+      onComplete(soldierData);
+    } catch (error) {
+      console.error("Error creating soldier:", error);
+      alert(t.errorCreatingSoldier);
+    }
     setIsProcessing(false);
   };
 
@@ -133,6 +154,18 @@ export default function AddSoldierModal({ onComplete, onClose }) {
               </SelectContent>
             </Select>
           </div>
+
+          {idWarning && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm">
+              <p className="font-semibold text-amber-800 mb-1">⚠ Soldier ID already in use</p>
+              <p className="text-amber-700">ID <strong>{soldierData.soldier_id}</strong> is already assigned to <strong>{idWarning.full_name}</strong> ({idWarning.rank}, {idWarning.platoon}).</p>
+              <p className="text-amber-600 mt-1">Do you still want to create this soldier with the same ID?</p>
+              <div className="flex gap-2 mt-3">
+                <Button type="button" size="sm" variant="outline" onClick={() => setIdWarning(null)}>Go Back</Button>
+                <Button type="button" size="sm" className="bg-amber-600 hover:bg-amber-700" onClick={handleForceCreate}>Create Anyway</Button>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
