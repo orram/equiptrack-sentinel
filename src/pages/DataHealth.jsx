@@ -4,7 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, DatabaseZap, AlertCircle, Trash2, Check } from "lucide-react";
+import { ArrowLeft, DatabaseZap, AlertCircle, Trash2, Check, Users } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -41,6 +41,85 @@ export default function DataHealth() {
     const [assigningWeekWeapons, setAssigningWeekWeapons] = useState(false);
     const [soldierSyncStatus, setSoldierSyncStatus] = useState('idle'); // idle, scanning, complete, error
     const [soldierSyncResults, setSoldierSyncResults] = useState({ checked: 0, updated: 0, mismatches: [] });
+
+    // Duplicate soldier ID detection & merge
+    const [dupSoldierStatus, setDupSoldierStatus] = useState('idle'); // idle, scanning, complete, merging
+    const [dupSoldierGroups, setDupSoldierGroups] = useState([]); // [{soldier_id, soldiers: [...]}]
+    const [mergeSelections, setMergeSelections] = useState({}); // {soldier_id: primaryDbId}
+    const [mergeDialogGroup, setMergeDialogGroup] = useState(null);
+
+    const scanForDuplicateSoldiers = async () => {
+        setDupSoldierStatus('scanning');
+        setDupSoldierGroups([]);
+        try {
+            const allSoldiers = await Soldier.list();
+            const grouped = {};
+            allSoldiers.forEach(s => {
+                if (!s.soldier_id) return;
+                if (!grouped[s.soldier_id]) grouped[s.soldier_id] = [];
+                grouped[s.soldier_id].push(s);
+            });
+            const groups = Object.entries(grouped)
+                .filter(([_, soldiers]) => soldiers.length > 1)
+                .map(([soldier_id, soldiers]) => ({ soldier_id, soldiers }));
+            setDupSoldierGroups(groups);
+            // Default selection: pick the oldest record (first created) as primary
+            const defaults = {};
+            groups.forEach(g => {
+                const sorted = [...g.soldiers].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                defaults[g.soldier_id] = sorted[0].id;
+            });
+            setMergeSelections(defaults);
+            setDupSoldierStatus('complete');
+        } catch (error) {
+            console.error("Error scanning for duplicate soldiers:", error);
+            setDupSoldierStatus('error');
+        }
+    };
+
+    const mergeSoldiers = async (group) => {
+        const primaryId = mergeSelections[group.soldier_id];
+        if (!primaryId) return;
+        const primary = group.soldiers.find(s => s.id === primaryId);
+        const duplicates = group.soldiers.filter(s => s.id !== primaryId);
+
+        setDupSoldierStatus('merging');
+        try {
+            const [allAssignments, allEquipment] = await Promise.all([
+                Assignment.list(),
+                Equipment.list(),
+            ]);
+
+            for (const dup of duplicates) {
+                // Re-point assignments
+                const dupAssignments = allAssignments.filter(a => a.soldier_id === dup.soldier_id && a.created_by === dup.id || a.soldier_id === dup.soldier_id);
+                for (const a of dupAssignments) {
+                    await Assignment.update(a.id, {
+                        soldier_id: primary.soldier_id,
+                        soldier_name: primary.full_name,
+                    });
+                }
+                // Re-point equipment
+                const dupEquipment = allEquipment.filter(e => e.issued_soldier_id === dup.soldier_id);
+                for (const e of dupEquipment) {
+                    await Equipment.update(e.id, {
+                        issued_soldier_id: primary.soldier_id,
+                        issued_soldier_name: primary.full_name,
+                    });
+                }
+                // Delete the duplicate soldier record
+                await Soldier.delete(dup.id);
+            }
+
+            alert(`Merged ${duplicates.length} duplicate(s) into "${primary.full_name}" (ID: ${primary.soldier_id}).`);
+            setMergeDialogGroup(null);
+            await scanForDuplicateSoldiers();
+        } catch (error) {
+            console.error("Error merging soldiers:", error);
+            alert("An error occurred during merge. Check console for details.");
+            setDupSoldierStatus('complete');
+        }
+    };
 
     const runSoldierInfoSync = async () => {
         setSoldierSyncStatus('scanning');
@@ -859,6 +938,102 @@ export default function DataHealth() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Duplicate Soldier ID Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="w-5 h-5 text-indigo-600"/>
+                            Duplicate Soldier ID Detection
+                        </CardTitle>
+                        <CardDescription>Find soldiers sharing the same ID, validate, and merge them into one record.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {(dupSoldierStatus === 'idle' || dupSoldierStatus === 'error') && (
+                            <div className="space-y-2">
+                                <Button onClick={scanForDuplicateSoldiers} variant="outline">Scan for Duplicate Soldiers</Button>
+                                {dupSoldierStatus === 'error' && <p className="text-red-600 text-sm font-semibold">An error occurred. Check the console.</p>}
+                            </div>
+                        )}
+                        {dupSoldierStatus === 'scanning' && <p className="text-slate-600">Scanning... Please wait.</p>}
+                        {dupSoldierStatus === 'merging' && <p className="text-slate-600">Merging records... Please wait.</p>}
+                        {dupSoldierStatus === 'complete' && (
+                            <div className="space-y-4">
+                                {dupSoldierGroups.length === 0 ? (
+                                    <p className="text-green-600 font-semibold">✓ No duplicate soldier IDs found!</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <p className="text-indigo-600 font-semibold">{dupSoldierGroups.length} duplicate group(s) found:</p>
+                                        {dupSoldierGroups.map(group => (
+                                            <div key={group.soldier_id} className="border rounded-lg p-4 bg-indigo-50">
+                                                <p className="font-semibold text-slate-800 mb-2">Soldier ID: <code className="bg-white px-2 py-0.5 rounded border">{group.soldier_id}</code> — {group.soldiers.length} records</p>
+                                                <div className="space-y-2 mb-3">
+                                                    {group.soldiers.map(s => (
+                                                        <label key={s.id} className="flex items-center gap-3 bg-white p-3 rounded border cursor-pointer">
+                                                            <input
+                                                                type="radio"
+                                                                name={`primary-${group.soldier_id}`}
+                                                                checked={mergeSelections[group.soldier_id] === s.id}
+                                                                onChange={() => setMergeSelections(prev => ({ ...prev, [group.soldier_id]: s.id }))}
+                                                            />
+                                                            <div className="flex-1">
+                                                                <p className="font-medium text-sm">{s.full_name}</p>
+                                                                <p className="text-xs text-slate-500">{s.rank} · {s.platoon} / {s.squad} · Created: {new Date(s.created_date).toLocaleDateString()}</p>
+                                                            </div>
+                                                            {mergeSelections[group.soldier_id] === s.id && (
+                                                                <Badge className="bg-indigo-600 text-white text-xs">Keep (Primary)</Badge>
+                                                            )}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    className="bg-indigo-600 hover:bg-indigo-700"
+                                                    onClick={() => setMergeDialogGroup(group)}
+                                                >
+                                                    Merge → Keep Selected Primary
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <Button onClick={scanForDuplicateSoldiers} variant="outline" size="sm">Rescan</Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Merge Confirmation Dialog */}
+                <Dialog open={!!mergeDialogGroup} onOpenChange={() => setMergeDialogGroup(null)}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Confirm Soldier Merge</DialogTitle>
+                            <DialogDescription>
+                                All assignments and equipment linked to the duplicate record(s) will be re-pointed to the primary soldier. Duplicate records will be deleted. This cannot be undone.
+                            </DialogDescription>
+                        </DialogHeader>
+                        {mergeDialogGroup && (() => {
+                            const primary = mergeDialogGroup.soldiers.find(s => s.id === mergeSelections[mergeDialogGroup.soldier_id]);
+                            const dups = mergeDialogGroup.soldiers.filter(s => s.id !== mergeSelections[mergeDialogGroup.soldier_id]);
+                            return (
+                                <div className="space-y-3 text-sm">
+                                    <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                                        <p className="font-semibold text-indigo-800">Primary (keep):</p>
+                                        <p>{primary?.full_name} · {primary?.rank} · {primary?.platoon}</p>
+                                    </div>
+                                    <div className="bg-red-50 p-3 rounded-lg border border-red-200">
+                                        <p className="font-semibold text-red-700">Will be deleted ({dups.length}):</p>
+                                        {dups.map(d => <p key={d.id}>{d.full_name} · {d.rank} · {d.platoon}</p>)}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setMergeDialogGroup(null)}>Cancel</Button>
+                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => mergeSoldiers(mergeDialogGroup)}>Confirm Merge</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Migration Card */}
                 <Card>
