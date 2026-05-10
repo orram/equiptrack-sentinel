@@ -964,6 +964,12 @@ export default function DataHealth() {
                                 ) : (
                                     <div className="space-y-3">
                                         <p className="text-indigo-600 font-semibold">{dupSoldierGroups.length} duplicate group(s) found:</p>
+                                        <Button
+                                            className="bg-indigo-600 hover:bg-indigo-700 w-full"
+                                            onClick={() => setMergeDialogGroup('all')}
+                                        >
+                                            Merge All Groups (keep oldest record in each)
+                                        </Button>
                                         {dupSoldierGroups.map(group => (
                                             <div key={group.soldier_id} className="border rounded-lg p-4 bg-indigo-50">
                                                 <p className="font-semibold text-slate-800 mb-2">Soldier ID: <code className="bg-white px-2 py-0.5 rounded border">{group.soldier_id}</code> — {group.soldiers.length} records</p>
@@ -1012,7 +1018,22 @@ export default function DataHealth() {
                                 All assignments and equipment linked to the duplicate record(s) will be re-pointed to the primary soldier. Duplicate records will be deleted. This cannot be undone.
                             </DialogDescription>
                         </DialogHeader>
-                        {mergeDialogGroup && (() => {
+                        {mergeDialogGroup === 'all' ? (
+                            <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
+                                <p className="font-semibold text-indigo-700">Will merge all {dupSoldierGroups.length} group(s), keeping the oldest record in each:</p>
+                                {dupSoldierGroups.map(group => {
+                                    const sorted = [...group.soldiers].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                                    const primary = sorted[0];
+                                    const dups = sorted.slice(1);
+                                    return (
+                                        <div key={group.soldier_id} className="bg-slate-50 p-2 rounded border text-xs">
+                                            <p><span className="text-indigo-700 font-semibold">Keep:</span> {primary.full_name} ({primary.rank})</p>
+                                            <p><span className="text-red-600 font-semibold">Delete:</span> {dups.map(d => d.full_name).join(', ')}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : mergeDialogGroup && (() => {
                             const primary = mergeDialogGroup.soldiers.find(s => s.id === mergeSelections[mergeDialogGroup.soldier_id]);
                             const dups = mergeDialogGroup.soldiers.filter(s => s.id !== mergeSelections[mergeDialogGroup.soldier_id]);
                             return (
@@ -1030,7 +1051,16 @@ export default function DataHealth() {
                         })()}
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setMergeDialogGroup(null)}>Cancel</Button>
-                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => mergeSoldiers(mergeDialogGroup)}>Confirm Merge</Button>
+                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={async () => {
+                                if (mergeDialogGroup === 'all') {
+                                    setMergeDialogGroup(null);
+                                    for (const group of dupSoldierGroups) {
+                                        await mergeSoldiers(group);
+                                    }
+                                } else {
+                                    mergeSoldiers(mergeDialogGroup);
+                                }
+                            }}>Confirm Merge</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
