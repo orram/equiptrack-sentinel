@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserCog, Save, X } from "lucide-react";
 
+const PLATOON_OPTIONS = ["א", "ב", "ג", "מסייעת", "דרג", "פלסם"];
+
 export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
   const [soldierData, setSoldierData] = useState({
     soldier_id: soldier.soldier_id || "",
@@ -113,11 +115,19 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit_platoon">{t.platoon}</Label>
-              <Input
-                id="edit_platoon"
+              <Select
                 value={soldierData.platoon}
-                onChange={(e) => setSoldierData({...soldierData, platoon: e.target.value})}
-              />
+                onValueChange={(value) => setSoldierData({...soldierData, platoon: value})}
+              >
+                <SelectTrigger id="edit_platoon">
+                  <SelectValue placeholder={t.platoon} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATOON_OPTIONS.map(platoon => (
+                    <SelectItem key={platoon} value={platoon}>{platoon}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">

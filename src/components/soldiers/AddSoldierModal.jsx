@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/language";
 
+const PLATOON_OPTIONS = ["א", "ב", "ג", "מסייעת", "דרג", "פלסם"];
+
 export default function AddSoldierModal({ onComplete, onClose }) {
   const { t } = useLanguage();
   const [soldierData, setSoldierData] = useState({
@@ -100,11 +102,19 @@ export default function AddSoldierModal({ onComplete, onClose }) {
             
             <div className="space-y-2">
               <Label htmlFor="platoon">{t.platoon}</Label>
-              <Input
-                id="platoon"
+              <Select
                 value={soldierData.platoon}
-                onChange={(e) => setSoldierData({...soldierData, platoon: e.target.value})}
-              />
+                onValueChange={(value) => setSoldierData({...soldierData, platoon: value})}
+              >
+                <SelectTrigger id="platoon">
+                  <SelectValue placeholder={t.platoon} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATOON_OPTIONS.map(platoon => (
+                    <SelectItem key={platoon} value={platoon}>{platoon}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

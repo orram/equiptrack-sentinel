@@ -60,7 +60,7 @@ export default function AmralControlTable() {
       setAmralControlItems(amralItemsData.sort((a, b) => a.display_order - b.display_order));
       setSoldiers(soldierData);
 
-      const allPlatoons = [...new Set(equipmentData.map(e => e.platoon).filter(Boolean))].sort();
+      const allPlatoons = [...new Set(equipmentData.map(e => String(e.platoon || '').trim()).filter(Boolean))].sort();
       setSelectedPlatoons(allPlatoons);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -70,7 +70,7 @@ export default function AmralControlTable() {
   };
   
   const allPlatoons = useMemo(() => {
-    return [...new Set(equipment.map(e => e.platoon).filter(Boolean))].sort();
+    return [...new Set(equipment.map(e => String(e.platoon || '').trim()).filter(Boolean))].sort();
   }, [equipment]);
 
   const processedData = useMemo(() => {
@@ -83,12 +83,12 @@ export default function AmralControlTable() {
 
     if (isSinglePlatoonView) {
       const platoon = selectedPlatoons[0];
-      const platoonEquipment = equipment.filter(e => e.platoon === platoon);
+      const platoonEquipment = equipment.filter(e => String(e.platoon || '').trim() === platoon);
       const UNASSIGNED_SQUAD_LABEL = language === 'he' ? 'ללא מחלקה' : 'Unassigned';
       
       const squadsFromSoldiers = [...new Set(
         soldiers
-          .filter(s => s.platoon === platoon && s.squad)
+          .filter(s => String(s.platoon || '').trim() === platoon && s.squad)
           .map(s => s.squad)
       )];
       
@@ -141,7 +141,7 @@ export default function AmralControlTable() {
       return { isSinglePlatoonView, singlePlatoonName: platoon, tableData, squads, equipmentTypes, totalsBySquad, platoonTotal };
 
     } else {
-      const platoonOrder = ["א", "ב", "ג", "מסייעת", "דרג"];
+      const platoonOrder = ["א", "ב", "ג", "מסייעת", "דרג", "פלסם"];
       const platoons = platoonOrder.filter(p => selectedPlatoons.includes(p))
           .concat(selectedPlatoons.filter(p => !platoonOrder.includes(p)).sort());
       const tableData = {};

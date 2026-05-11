@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, UserCog, Save, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const PLATOON_OPTIONS = ["א", "ב", "ג", "מסייעת", "דרג", "פלסם"];
 
 export default function SoldierDetailsEdit({ soldier, onSave, onBack, t }) {
   const [soldierData, setSoldierData] = useState({
@@ -130,11 +133,19 @@ export default function SoldierDetailsEdit({ soldier, onSave, onBack, t }) {
             </div>
             <div>
               <Label htmlFor="platoon">{t.platoon}</Label>
-              <Input
-                id="platoon"
+              <Select
                 value={soldierData.platoon}
-                onChange={(e) => setSoldierData({ ...soldierData, platoon: e.target.value })}
-              />
+                onValueChange={(value) => setSoldierData({ ...soldierData, platoon: value })}
+              >
+                <SelectTrigger id="platoon">
+                  <SelectValue placeholder={t.platoon} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATOON_OPTIONS.map(platoon => (
+                    <SelectItem key={platoon} value={platoon}>{platoon}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>
