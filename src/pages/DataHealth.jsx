@@ -915,8 +915,8 @@ export default function DataHealth() {
                             <Button onClick={scanForLastWeekWeaponConflicts} variant="outline">{dh.scanLastWeek}</Button>
                         )}
                         {weekWeaponStatus === 'scanning' && (
-                           <p className="text-slate-600">Scanning... Please wait.</p>
-                        )}
+                           <p className="text-slate-600">{dh.scanning}</p>
+                         )}
                         {weekWeaponStatus === 'complete' && (
                              <div className="space-y-4">
                                  {weekWeaponConflicts.length === 0 ? (
@@ -972,15 +972,15 @@ export default function DataHealth() {
                             <Button onClick={scanForTodayWeaponConflicts} variant="outline">{dh.scanToday}</Button>
                         )}
                         {todayWeaponStatus === 'scanning' && (
-                           <p className="text-slate-600">Scanning... Please wait.</p>
-                        )}
+                           <p className="text-slate-600">{dh.scanning}</p>
+                         )}
                         {todayWeaponStatus === 'complete' && (
                              <div className="space-y-4">
                                  {todayWeaponConflicts.length === 0 ? (
-                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                     <p className="text-green-600 font-semibold">{dh.noConflictsFound}</p>
                                  ) : (
                                      <div>
-                                        <p className="text-blue-600 font-semibold mb-4">{todayWeaponConflicts.length} weapon(s) assigned today but still marked as storage:</p>
+                                        <p className="text-blue-600 font-semibold mb-4">{dh.weaponsTodayStorage(todayWeaponConflicts.length)}</p>
                                         <div className="space-y-2 mb-4 border rounded-lg p-3 bg-blue-50">
                                             {todayWeaponConflicts.map((conflict) => (
                                                 <div key={conflict.equipmentId} className="flex items-center gap-3 bg-white p-3 rounded border">
@@ -1001,7 +1001,7 @@ export default function DataHealth() {
                                                 disabled={assigningWeapons}
                                                 className="bg-blue-600 hover:bg-blue-700 w-full"
                                             >
-                                                {assigningWeapons ? 'Updating...' : `Assign Selected ${selectedWeapons.size} Weapon(s)`}
+                                                {assigningWeapons ? dh.updating : dh.assignSelected(selectedWeapons.size)}
                                             </Button>
                                         )}
                                      </div>
@@ -1009,8 +1009,8 @@ export default function DataHealth() {
                             </div>
                         )}
                         {todayWeaponStatus === 'error' && (
-                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
-                        )}
+                           <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
+                         )}
                     </CardContent>
                 </Card>
 
@@ -1019,24 +1019,24 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <AlertCircle className="w-5 h-5 text-orange-600"/>
-                           Storage vs Active Conflict Detection
+                           {dh.conflictTitle}
                         </CardTitle>
-                        <CardDescription>Find equipment marked as "storage" but assigned to active soldiers.</CardDescription>
+                        <CardDescription>{dh.conflictDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {conflictStatus === 'idle' && (
-                            <Button onClick={scanForConflicts} variant="outline">Scan for Conflicts</Button>
+                            <Button onClick={scanForConflicts} variant="outline">{dh.scanConflicts}</Button>
                         )}
                         {conflictStatus === 'scanning' && (
-                           <p className="text-slate-600">Scanning... Please wait.</p>
+                           <p className="text-slate-600">{dh.scanning}</p>
                         )}
                         {conflictStatus === 'complete' && (
                              <div className="space-y-4">
                                  {conflicts.length === 0 ? (
-                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                     <p className="text-green-600 font-semibold">{dh.noConflictsFound}</p>
                                  ) : (
                                      <div>
-                                        <p className="text-orange-600 font-semibold mb-4">{conflicts.length} item(s) marked as storage but actively assigned:</p>
+                                        <p className="text-orange-600 font-semibold mb-4">{dh.itemsStorageButAssigned(conflicts.length)}</p>
                                         <div className="space-y-3">
                                             {conflicts.map((conflict) => (
                                                 <div key={conflict.equipmentId} className="border rounded-lg p-4 bg-orange-50">
@@ -1044,7 +1044,7 @@ export default function DataHealth() {
                                                         <div>
                                                             <p className="font-semibold text-slate-900">{conflict.equipmentId}</p>
                                                             <p className="text-sm text-slate-600">{conflict.equipmentName}</p>
-                                                            <p className="text-sm text-orange-600 mt-2">Assigned to: {conflict.activeSoldier} ({conflict.activeSoldierId})</p>
+                                                            <p className="text-sm text-orange-600 mt-2">{dh.assignedTo}: {conflict.activeSoldier} ({conflict.activeSoldierId})</p>
                                                         </div>
                                                         <Button
                                                             size="sm"
@@ -1053,20 +1053,20 @@ export default function DataHealth() {
                                                                 setDeleteDialogOpen(true);
                                                             }}
                                                         >
-                                                            Mark as Returned
-                                                        </Button>
+                                                            {dh.markAsReturned}
+                                                            </Button>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
-                                        <Button onClick={scanForConflicts} variant="outline" className="mt-4">Rescan</Button>
+                                        <Button onClick={scanForConflicts} variant="outline" className="mt-4">{dh.rescan}</Button>
                                      </div>
                                  )}
                             </div>
                         )}
                         {conflictStatus === 'error' && (
-                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
-                        )}
+                           <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
+                         )}
                     </CardContent>
                 </Card>
 
@@ -1075,27 +1075,27 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <AlertCircle className="w-5 h-5 text-red-600"/>
-                           Duplicate Assignment Detection
+                           {dh.duplicateTitle}
                         </CardTitle>
-                        <CardDescription>Scan for equipment assigned to multiple soldiers simultaneously.</CardDescription>
+                        <CardDescription>{dh.duplicateDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {duplicateStatus === 'idle' && (
-                            <Button onClick={scanForDuplicates} variant="destructive">Scan for Duplicates</Button>
+                            <Button onClick={scanForDuplicates} variant="destructive">{dh.scanDuplicates}</Button>
                         )}
                         {duplicateStatus === 'scanning' && (
-                           <p className="text-slate-600">Scanning... Please wait.</p>
+                           <p className="text-slate-600">{dh.scanning}</p>
                         )}
                         {duplicateStatus === 'complete' && (
                              <div className="space-y-4">
                                  {duplicates.length === 0 ? (
-                                     <p className="text-green-600 font-semibold">✓ No duplicates found!</p>
+                                     <p className="text-green-600 font-semibold">{dh.noDuplicatesFound}</p>
                                  ) : (
                                      <div>
                                          {sameSoldierDuplicates.length > 0 && (
                                              <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-4">
                                                  <p className="font-semibold text-yellow-800 mb-3">
-                                                     Found {sameSoldierDuplicates.length} case(s) with same soldier assigned on same day:
+                                                     {dh.sameSoldierDups(sameSoldierDuplicates.length)}
                                                  </p>
                                                  <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
                                                      {sameSoldierDuplicates.map((dup, idx) => (
@@ -1105,26 +1105,26 @@ export default function DataHealth() {
                                                      ))}
                                                  </div>
                                                  <Button onClick={handleBulkRemoveSameSoldier} disabled={bulkRemoving} className="bg-yellow-600 hover:bg-yellow-700">
-                                                     {bulkRemoving ? 'Removing...' : `Bulk Remove (${sameSoldierDuplicates.reduce((sum, dup) => sum + (dup.assignments.length - 1), 0)} items)`}
+                                                     {bulkRemoving ? dh.removing : dh.bulkRemove(sameSoldierDuplicates.reduce((sum, dup) => sum + (dup.assignments.length - 1), 0))}
                                                  </Button>
                                              </div>
                                          )}
                                          <div>
-                                        <p className="text-red-600 font-semibold mb-4">{duplicates.length} equipment item(s) with duplicate assignments:</p>
+                                        <p className="text-red-600 font-semibold mb-4">{dh.itemsStorageConflict(duplicates.length)}</p>
                                         <div className="space-y-3">
                                             {duplicates.map((dup) => (
                                                 <div key={dup.equipmentId} className="border rounded-lg p-4 bg-red-50">
                                                     <div className="flex justify-between items-start mb-3">
                                                         <div>
                                                             <p className="font-semibold text-slate-900">{dup.equipmentId}</p>
-                                                            <Badge className="bg-red-600 mt-1">{dup.count} active assignments</Badge>
+                                                            <Badge className="bg-red-600 mt-1">{dup.count} {dh.activeAssignments}</Badge>
                                                         </div>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => setSelectedDuplicate(selectedDuplicate === dup.equipmentId ? null : dup.equipmentId)}
-                                                        >
-                                                            {selectedDuplicate === dup.equipmentId ? 'Hide' : 'Show'} Details
+                                                            >
+                                                            {selectedDuplicate === dup.equipmentId ? dh.hideDetails : dh.showDetails}
                                                         </Button>
                                                     </div>
                                                     
@@ -1140,8 +1140,8 @@ export default function DataHealth() {
                                                                             />
                                                                         )}
                                                                         <div className={idx === 0 ? 'opacity-60' : ''}>
-                                                                            <p className="text-sm font-medium">{idx === 0 ? '(Latest) ' : ''}{assignment.soldier_name} ({assignment.soldier_id})</p>
-                                                                            <p className="text-xs text-slate-500">Assigned: {new Date(assignment.assignment_date).toLocaleDateString()}</p>
+                                                                            <p className="text-sm font-medium">{idx === 0 ? dh.latest + ' ' : ''}{assignment.soldier_name} ({assignment.soldier_id})</p>
+                                                                                <p className="text-xs text-slate-500">{dh.assignedDate}: {new Date(assignment.assignment_date).toLocaleDateString()}</p>
                                                                         </div>
                                                                     </div>
                                                                     {idx !== 0 && (
@@ -1154,7 +1154,7 @@ export default function DataHealth() {
                                                                             }}
                                                                         >
                                                                             <Trash2 className="w-3 h-3 mr-1" />
-                                                                            Remove
+                                                                            {dh.remove}
                                                                         </Button>
                                                                     )}
                                                                 </div>
@@ -1166,22 +1166,22 @@ export default function DataHealth() {
                                         </div>
                                          {selectedForRemoval.size > 0 && (
                                              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-300">
-                                                 <p className="text-sm font-medium text-blue-800 mb-3">{selectedForRemoval.size} duplicate(s) selected for removal</p>
+                                                 <p className="text-sm font-medium text-blue-800 mb-3">{dh.bulkRemove(selectedForRemoval.size)}</p>
                                                  <Button onClick={handleRemoveSelected} disabled={bulkRemoving} className="w-full bg-red-600 hover:bg-red-700">
                                                      <Trash2 className="w-4 h-4 mr-2" />
-                                                     {bulkRemoving ? 'Removing...' : 'Remove Selected'}
+                                                     {bulkRemoving ? dh.removing : dh.removeAssignmentBtn}
                                                  </Button>
                                              </div>
                                          )}
                                          </div>
-                                         <Button onClick={scanForDuplicates} variant="outline" className="mt-4">Rescan</Button>
+                                         <Button onClick={scanForDuplicates} variant="outline" className="mt-4">{dh.rescan}</Button>
                                         </div>
                                         )}
                                         </div>
                                         )}
                         {duplicateStatus === 'error' && (
-                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
-                        )}
+                           <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
+                         )}
                     </CardContent>
                 </Card>
 
@@ -1190,19 +1190,19 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Users className="w-5 h-5 text-indigo-600"/>
-                            Duplicate Soldier ID Detection
-                        </CardTitle>
-                        <CardDescription>Find soldiers sharing the same ID, validate, and merge them into one record.</CardDescription>
+                            {dh.duplicateSoldierTitle}
+                            </CardTitle>
+                            <CardDescription>{dh.duplicateSoldierDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {(dupSoldierStatus === 'idle' || dupSoldierStatus === 'error') && (
                             <div className="space-y-2">
-                                <Button onClick={scanForDuplicateSoldiers} variant="outline">Scan for Duplicate Soldiers</Button>
-                                {dupSoldierStatus === 'error' && <p className="text-red-600 text-sm font-semibold">An error occurred. Check the console.</p>}
+                                <Button onClick={scanForDuplicateSoldiers} variant="outline">{dh.scanDuplicateSoldiers}</Button>
+                                {dupSoldierStatus === 'error' && <p className="text-red-600 text-sm font-semibold">{dh.errorOccurred}</p>}
                             </div>
                         )}
-                        {dupSoldierStatus === 'scanning' && <p className="text-slate-600">Scanning... Please wait.</p>}
-                        {dupSoldierStatus === 'merging' && <p className="text-slate-600">Merging records... Please wait.</p>}
+                        {dupSoldierStatus === 'scanning' && <p className="text-slate-600">{dh.scanning}</p>}
+                        {dupSoldierStatus === 'merging' && <p className="text-slate-600">{dh.merging}</p>}
                         {dupSoldierStatus === 'complete' && (
                             <div className="space-y-4">
                                 {dupSoldierGroups.length === 0 ? (
