@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Soldier } from "@/entities/all";
+import { Soldier, Equipment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,28 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
     setIsProcessing(true);
     try {
       await Soldier.update(soldier.id, soldierData);
+
+      // Sync relevant fields to all equipment issued to this soldier
+      const nameChanged = soldierData.full_name !== soldier.full_name;
+      const platoonChanged = soldierData.platoon !== soldier.platoon;
+      const squadChanged = soldierData.squad !== soldier.squad;
+      const idChanged = soldierData.soldier_id !== soldier.soldier_id;
+
+      if (nameChanged || platoonChanged || squadChanged || idChanged) {
+        const issuedEquipment = await Equipment.filter({ issued_soldier_id: soldier.soldier_id });
+        const updatePayload = {};
+        if (nameChanged) updatePayload.issued_soldier_name = soldierData.full_name;
+        if (platoonChanged) updatePayload.platoon = soldierData.platoon;
+        if (squadChanged) updatePayload.squad = soldierData.squad;
+        if (idChanged) updatePayload.issued_soldier_id = soldierData.soldier_id;
+
+        for (const item of issuedEquipment) {
+          await Equipment.update(item.id, updatePayload);
+        }
+      }
+
       onSave();
-    } catch (error)      {
+    } catch (error) {
       console.error("Error updating soldier:", error);
       alert(t.errorUpdatingSoldier);
     }
