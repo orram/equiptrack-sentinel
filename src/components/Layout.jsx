@@ -17,6 +17,7 @@ import {
   Languages,
   ClipboardCheck,
   Layers,
+  Eye,
   LogOut,
   ChevronUp
 } from "lucide-react";
@@ -82,6 +83,7 @@ export default function Layout({ children }) {
     { title: t.dashboard, url: createPageUrl("Dashboard"), icon: Shield },
     { title: t.assignmentTool, url: createPageUrl("AssignmentTool"), icon: Search },
     { title: t.returnTool, url: createPageUrl("ReturnTool"), icon: RotateCcw },
+    { title: t.greenEyeTool || 'ירוק בעיניים', url: createPageUrl("GreenEyeTool"), icon: Eye },
   ];
 
   const controlTableItems = [
