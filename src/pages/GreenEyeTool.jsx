@@ -42,7 +42,7 @@ export default function GreenEyeTool() {
   }, [inspections]);
 
   const openReportBuilder = () => {
-    window.open(createPageUrl("GreenEyeReport"), "_blank");
+    navigate(createPageUrl("GreenEyeReport"));
   };
 
   return (
