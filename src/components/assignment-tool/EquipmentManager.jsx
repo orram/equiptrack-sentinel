@@ -187,6 +187,8 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
         issued_soldier_name: newStatus === 'storage' || newStatus === 'repair' ? null : equipmentItem.issued_soldier_name
       });
 
+      // Refresh allAssignments so activeAssignments (derived from it) reflects the change immediately
+      await loadAllAssignments();
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error updating equipment status:", error);
@@ -441,9 +443,10 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     }
     setIsAddingNew(true);
     try {
+      const createdName = newObjectName.trim();
       const newItem = await Equipment.create({
         serial_number: newSerialNumber.trim(),
-        object_name: newObjectName.trim(),
+        object_name: createdName,
         assignment_status: "storage",
         platoon: soldier.platoon || "",
         squad: soldier.squad || "",
@@ -452,12 +455,12 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
       setNewObjectName("");
       setShowAddBySerial(false);
       onUpdate();
-      // Add to pending after creation
-      const availableSupplanting = supplantingItems.filter(item => item.equipment_name === newObjectName.trim());
+      // Add to pending after creation — use newItem.serial_number from DB response
+      const availableSupplanting = supplantingItems.filter(item => item.equipment_name === createdName);
       setPendingAssignments(prev => [...prev, {
         ...newItem,
-        serial_number: newSerialNumber.trim(),
-        object_name: newObjectName.trim(),
+        serial_number: newItem.serial_number,
+        object_name: newItem.object_name,
         assignment_type: 'serialized',
         assignment_status: 'storage',
         availableSupplantingItems: availableSupplanting

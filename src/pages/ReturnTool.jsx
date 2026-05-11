@@ -140,29 +140,30 @@ export default function ReturnTool() {
       return;
     }
 
+    // Snapshot the full item data at the time of confirmation (before filters can change)
+    const itemsSnapshot = allIssuedItems.filter(item => selectedItems.includes(item.assignment.id));
+
     // Check if any items have supplanting items
-    const itemsWithSupplanting = allIssuedItems.filter(item => 
-      selectedItems.includes(item.assignment.id) && 
+    const itemsWithSupplanting = itemsSnapshot.filter(item =>
       item.assignment?.signature_data?.supplanting_items?.length > 0
     );
 
     if (itemsWithSupplanting.length > 0) {
-      setPendingReturnItems(selectedItems);
+      setPendingReturnItems(itemsSnapshot);
       setSupplantingCheckOpen(true);
       return;
     }
 
-    await processReturn();
+    await processReturn(itemsSnapshot);
   };
 
-  const processReturn = async () => {
+  const processReturn = async (itemsToProcess) => {
+    // Use the snapshot passed in; fall back to pendingReturnItems if called from dialog
+    const items = itemsToProcess || pendingReturnItems;
     setIsProcessing(true);
     
     try {
-      for (const assignmentId of selectedItems) {
-        const issuedItem = allIssuedItems.find(i => i.assignment.id === assignmentId);
-        if (!issuedItem) continue;
-
+      for (const issuedItem of items) {
         const { assignment, itemDetails, soldier } = issuedItem;
 
         // Update the main assignment
@@ -175,22 +176,16 @@ export default function ReturnTool() {
 
         // Handle supplanting items return
         if (assignment.signature_data?.supplanting_items && assignment.signature_data.supplanting_items.length > 0) {
-          console.log(`Processing return of ${assignment.signature_data.supplanting_items.length} supplanting items for ${assignment.equipment_id}`);
-          
           for (const supplantingItemName of assignment.signature_data.supplanting_items) {
-            // Check if this supplanting item exists in inventory
-            const inventoryMatch = inventoryItems.find(item => 
+            // Skip if this is the same as the main inventory item (prevents double-counting)
+            if (assignment.assignment_type === 'inventory' && supplantingItemName.toLowerCase() === assignment.equipment_id.toLowerCase()) continue;
+            const inventoryMatch = inventoryItems.find(item =>
               item.object_name.toLowerCase() === supplantingItemName.toLowerCase()
             );
-            
             if (inventoryMatch) {
-              // Return to inventory
               await InventoryItem.update(inventoryMatch.id, {
                 available_quantity: (inventoryMatch.available_quantity || 0) + 1
               });
-              console.log(`Returned supplanting item "${supplantingItemName}" to inventory`);
-            } else {
-              console.log(`Supplanting item "${supplantingItemName}" not found in inventory - may be serialized or tracked separately`);
             }
           }
         }
@@ -222,7 +217,7 @@ export default function ReturnTool() {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
-      alert(t.successfullyReturnedNItems(selectedItems.length));
+      alert(t.successfullyReturnedNItems(items.length));
       setSelectedItems([]);
       setPendingReturnItems([]);
       loadData();
@@ -466,13 +461,11 @@ export default function ReturnTool() {
           <SupplantingItemsCheckDialog
             isOpen={supplantingCheckOpen}
             supplantingItems={Array.from(new Set(
-              allIssuedItems
-                .filter(item => pendingReturnItems.includes(item.assignment.id))
-                .flatMap(item => item.assignment?.signature_data?.supplanting_items || [])
+              pendingReturnItems.flatMap(item => item.assignment?.signature_data?.supplanting_items || [])
             ))}
             onConfirm={() => {
               setSupplantingCheckOpen(false);
-              processReturn();
+              processReturn(pendingReturnItems);
             }}
             onCancel={() => {
               setSupplantingCheckOpen(false);
