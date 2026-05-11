@@ -85,15 +85,16 @@ export default function EquipmentControlTable() {
       const platoonEquipment = equipment.filter(e => String(e.platoon || '').trim() === platoon);
       const UNASSIGNED_SQUAD_LABEL = language === 'he' ? 'ללא מחלקה' : 'Unassigned';
       
-      const squadsFromSoldiers = [...new Set(
-        soldiers
-          .filter(s => String(s.platoon || '').trim() === platoon && s.squad)
-          .map(s => s.squad)
+      const relevantPlatoonEquipment = platoonEquipment.filter(e => equipmentTypes.includes(String(e.object_name || '').trim()));
+      const squadsFromEquipment = [...new Set(
+        relevantPlatoonEquipment
+          .filter(e => e.squad)
+          .map(e => e.squad)
       )];
 
-      const hasUnassignedEquipment = platoonEquipment.some(e => !e.squad);
+      const hasUnassignedEquipment = relevantPlatoonEquipment.some(e => !e.squad);
       
-      const allSquadsInPlatoon = [...squadsFromSoldiers];
+      const allSquadsInPlatoon = [...squadsFromEquipment];
       if (hasUnassignedEquipment && !allSquadsInPlatoon.includes(UNASSIGNED_SQUAD_LABEL)) {
           allSquadsInPlatoon.push(UNASSIGNED_SQUAD_LABEL);
       }
