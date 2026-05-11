@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Soldier, Equipment } from "@/entities/all";
+import { Soldier, Equipment, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
           (item.issued_soldier_name && item.issued_soldier_name === soldier.full_name)
         );
 
-        const updatePayload = {
+        const equipmentUpdatePayload = {
           issued_soldier_id: soldierData.soldier_id,
           issued_soldier_name: soldierData.full_name,
           platoon: soldierData.platoon,
@@ -49,7 +49,18 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
         };
 
         for (const item of issuedEquipment) {
-          await Equipment.update(item.id, updatePayload);
+          await Equipment.update(item.id, equipmentUpdatePayload);
+        }
+
+        // Also update active Assignment records so ReturnTool can find them by new soldier_id
+        if (idChanged) {
+          const activeAssignments = await Assignment.filter({ soldier_id: soldier.soldier_id, status: 'active' });
+          for (const a of activeAssignments) {
+            await Assignment.update(a.id, {
+              soldier_id: soldierData.soldier_id,
+              soldier_name: soldierData.full_name,
+            });
+          }
         }
       }
 
