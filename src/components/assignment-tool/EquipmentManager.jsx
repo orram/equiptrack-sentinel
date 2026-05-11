@@ -231,6 +231,9 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
 
     setIsProcessing(true);
     try {
+      let previousAssignmentToReturn = null;
+      let previousSoldierToNotify = null;
+
       if (equipmentItem.assignment_status === 'issued') {
         const currentHolder = equipmentItem.issued_soldier_name || 'Unknown';
         const newHolder = soldier.full_name || 'Unknown';
@@ -252,22 +255,8 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
         );
 
         if (currentAssignment) {
-          await Assignment.update(currentAssignment.id, {
-            status: 'returned',
-            return_date: new Date().toISOString().split('T')[0],
-            condition_on_return: equipmentItem.condition || 'good',
-            notes: `Auto-returned due to reassignment to ${soldier.full_name} (${soldier.soldier_id})`
-          });
-
-          const previousSoldier = allSoldiers.find(s => s.soldier_id === currentAssignment.soldier_id);
-          if (previousSoldier?.email && EmailService) {
-            try {
-              await EmailService.sendReturnEmail(previousSoldier, equipmentItem, currentAssignment);
-              console.log(`Return notification sent to ${previousSoldier.email}`);
-            } catch (emailError) {
-              console.error("Error sending return email:", emailError);
-            }
-          }
+          previousAssignmentToReturn = currentAssignment;
+          previousSoldierToNotify = allSoldiers.find(s => s.soldier_id === currentAssignment.soldier_id);
         }
       }
 
@@ -291,7 +280,9 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
       const equipmentWithSupplanting = { 
         ...equipmentItem, 
         assignment_type: 'serialized',
-        availableSupplantingItems: availableSupplanting
+        availableSupplantingItems: availableSupplanting,
+        previous_assignment: previousAssignmentToReturn,
+        previous_soldier: previousSoldierToNotify
       };
       setPendingAssignments(prev => [...prev, equipmentWithSupplanting]);
 
@@ -398,6 +389,19 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
 
         await Assignment.create(assignmentData);
 
+        if (item.previous_assignment?.id) {
+          await Assignment.update(item.previous_assignment.id, {
+            status: 'returned',
+            return_date: new Date().toISOString().split('T')[0],
+            condition_on_return: item.condition || 'good',
+            notes: `Auto-returned due to reassignment to ${soldier.full_name} (${soldier.soldier_id})`
+          });
+
+          if (item.previous_soldier?.email && EmailService) {
+            await EmailService.sendReturnEmail(item.previous_soldier, item, item.previous_assignment);
+          }
+        }
+
         if (item.assignment_type === 'inventory') {
           const invItem = inventoryItems.find(i => i.object_name === item.object_name);
           if (invItem) {
@@ -499,10 +503,11 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
     return (
       <DigitalSignature
         soldier={soldier}
-        equipmentToSign={pendingAssignments.map(item => ({
+        pendingAssignments={pendingAssignments.map(item => ({
           ...item,
           selectedSupplantingItems: selectedSupplantingItems[item.serial_number] || [],
         }))}
+        supplantingItems={selectedSupplantingItems}
         onComplete={(signatureData) => handleSignatureComplete(pendingAssignments, signatureData)}
         onCancel={() => setShowSignature(false)}
         t={t}

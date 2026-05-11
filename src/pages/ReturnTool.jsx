@@ -163,6 +163,11 @@ export default function ReturnTool() {
     setIsProcessing(true);
     
     try {
+      const inventoryQuantityDeltas = {};
+      const addInventoryDelta = (inventoryItem, quantity) => {
+        inventoryQuantityDeltas[inventoryItem.id] = (inventoryQuantityDeltas[inventoryItem.id] || 0) + quantity;
+      };
+
       for (const issuedItem of items) {
         const { assignment, itemDetails, soldier } = issuedItem;
 
@@ -183,9 +188,7 @@ export default function ReturnTool() {
               item.object_name.toLowerCase() === supplantingItemName.toLowerCase()
             );
             if (inventoryMatch) {
-              await InventoryItem.update(inventoryMatch.id, {
-                available_quantity: (inventoryMatch.available_quantity || 0) + 1
-              });
+              addInventoryDelta(inventoryMatch, 1);
             }
           }
         }
@@ -194,9 +197,7 @@ export default function ReturnTool() {
         if (assignment.assignment_type === 'inventory') {
           const invItem = inventoryItems.find(i => i.object_name === assignment.equipment_id);
           if (invItem) {
-            await InventoryItem.update(invItem.id, {
-              available_quantity: (invItem.available_quantity || 0) + (assignment.quantity || 1)
-            });
+            addInventoryDelta(invItem, assignment.quantity || 1);
           }
         } else {
           const eqItem = equipment.find(e => e.serial_number === assignment.equipment_id);
@@ -215,6 +216,15 @@ export default function ReturnTool() {
         }
 
         await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      for (const [inventoryId, quantityToReturn] of Object.entries(inventoryQuantityDeltas)) {
+        const inventoryItem = inventoryItems.find(item => item.id === inventoryId);
+        if (inventoryItem) {
+          await InventoryItem.update(inventoryId, {
+            available_quantity: (inventoryItem.available_quantity || 0) + quantityToReturn
+          });
+        }
       }
 
       alert(t.successfullyReturnedNItems(items.length));

@@ -472,7 +472,7 @@ export default function EquipmentPage() {
                 Delete Equipment
               </DialogTitle>
               <DialogDescription>
-                This action cannot be undone. The equipment record will be moved to the archive.
+                This action cannot be undone. The equipment record will be permanently deleted.
               </DialogDescription>
             </DialogHeader>
             {equipmentToDelete && (
@@ -485,16 +485,9 @@ export default function EquipmentPage() {
                     Status: <span className="font-medium">{equipmentToDelete.assignment_status}</span>
                   </p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700">Deletion Reason (optional)</label>
-                  <textarea
-                    value={deleteReason}
-                    onChange={(e) => setDeleteReason(e.target.value)}
-                    placeholder="Why is this equipment being deleted?"
-                    className="w-full mt-2 p-2 border rounded-lg text-sm"
-                    rows="3"
-                  />
-                </div>
+                <p className="text-sm text-red-700">
+                  This will remove the equipment from the active list without creating an archive record.
+                </p>
               </div>
             )}
             <DialogFooter>

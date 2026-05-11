@@ -7,7 +7,6 @@ import { User, Package, Edit, ShieldCheck, AlertCircle, Layers } from "lucide-re
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import SignaturePad from "../signature/SignaturePad";
-import { Assignment, Equipment, InventoryItem } from "@/entities/all"; // Import entities
 
 export default function DigitalSignature({
   soldier,
@@ -43,73 +42,8 @@ export default function DigitalSignature({
       supplanting_items: supplantingItems
     };
 
-    const signedEquipmentForEmail = [];
-
-    try {
-      // Get current user info for assignment tracking
-      let currentUser;
-      try {
-        currentUser = await User.me();
-      } catch (error) {
-        console.error("Could not get current user:", error);
-        currentUser = { full_name: "System User", email: "system@app.com" }; // Fallback user info
-      }
-
-      // Deduplicate pending assignments before creating records
-      const uniquePendingAssignments = pendingAssignments.filter((item, index, self) =>
-        index === self.findIndex(p =>
-          p.assignment_type === 'serialized'
-            ? p.serial_number === item.serial_number
-            : p.object_name === item.object_name // For inventory items
-        )
-      );
-
-      // Create new assignments and update equipment status
-      const creationPromises = uniquePendingAssignments.map(async (item) => {
-        const assignmentRecord = {
-          soldier_id: soldier.soldier_id,
-          soldier_name: soldier.full_name,
-          assignment_date: new Date().toISOString().split('T')[0],
-          status: 'active',
-          assigned_by: currentUser.full_name || currentUser.email || "System User", // Use current user info
-          signature_data: signatureData,
-          assignment_type: item.assignment_type,
-          equipment_id: item.assignment_type === 'serialized' ? item.serial_number : item.object_name,
-          quantity: item.assignment_type === 'inventory' ? item.quantity : null,
-          condition_on_assignment: item.condition || 'good'
-        };
-        await Assignment.create(assignmentRecord);
-        
-        signedEquipmentForEmail.push(item);
-
-        if (item.assignment_type === 'serialized') {
-          await Equipment.update(item.id, {
-            assignment_status: 'issued',
-            issued_soldier_id: soldier.soldier_id,
-            issued_soldier_name: soldier.full_name,
-            platoon: soldier.platoon,
-            squad: soldier.squad,
-          });
-        } else if (item.assignment_type === 'inventory') {
-          const currentItem = await InventoryItem.get(item.id);
-          if (currentItem) {
-            await InventoryItem.update(item.id, {
-              available_quantity: (currentItem.available_quantity || 0) - (item.quantity || 1),
-            });
-          }
-        }
-      });
-
-      await Promise.all(creationPromises);
-      
-      onComplete(signedEquipmentForEmail, signatureData);
-
-    } catch (err) {
-      console.error("Error completing assignment:", err);
-      setError(t.errorSavingAssignment || "An error occurred while saving the assignment. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
+    await onComplete(signatureData);
+    setIsProcessing(false);
   };
 
   const allSupplantingItems = Object.entries(supplantingItems || {})

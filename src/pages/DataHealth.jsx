@@ -560,12 +560,15 @@ export default function DataHealth() {
                     if (activeAssignment) {
                         foundConflicts.push({
                             equipmentId: item.serial_number,
+                            equipmentDbId: item.id,
                             equipmentName: item.object_name,
                             markedAs: 'storage',
                             activeSoldier: activeAssignment.soldier_name,
                             activeSoldierId: activeAssignment.soldier_id,
                             assignmentId: activeAssignment.id,
-                            equipmentId: item.id
+                            equipment_id: item.serial_number,
+                            soldier_name: activeAssignment.soldier_name,
+                            assignment_date: activeAssignment.assignment_date
                         });
                     }
                 }
@@ -644,10 +647,13 @@ export default function DataHealth() {
     const handleDeleteAssignment = async () => {
         if (!assignmentToDelete) return;
         try {
-            await Assignment.update(assignmentToDelete.id, { status: 'returned' });
+            await Assignment.update(assignmentToDelete.assignmentId || assignmentToDelete.id, {
+                status: 'returned',
+                return_date: new Date().toISOString().split('T')[0]
+            });
             setDeleteDialogOpen(false);
             setAssignmentToDelete(null);
-            await scanForDuplicates();
+            await Promise.all([scanForDuplicates(), scanForConflicts()]);
         } catch (error) {
             console.error("Error deleting assignment:", error);
             alert("Failed to mark assignment as returned. Please try again.");
