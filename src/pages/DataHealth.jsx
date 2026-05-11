@@ -1213,8 +1213,37 @@ export default function DataHealth() {
                             <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={async () => {
                                 if (mergeDialogGroup === 'all') {
                                     setMergeDialogGroup(null);
-                                    for (const group of dupSoldierGroups) {
-                                        await mergeSoldiers(group);
+                                    const groupsToMerge = [...dupSoldierGroups];
+                                    setDupSoldierStatus('merging');
+                                    let totalMerged = 0;
+                                    try {
+                                        const [allAssignments, allEquipment] = await Promise.all([
+                                            Assignment.list(),
+                                            Equipment.list(),
+                                        ]);
+                                        for (const group of groupsToMerge) {
+                                            const primaryId = mergeSelections[group.soldier_id];
+                                            const primary = group.soldiers.find(s => s.id === primaryId);
+                                            const dups = group.soldiers.filter(s => s.id !== primaryId);
+                                            for (const dup of dups) {
+                                                const dupAssignments = allAssignments.filter(a => a.soldier_id === dup.soldier_id);
+                                                for (const a of dupAssignments) {
+                                                    await Assignment.update(a.id, { soldier_id: primary.soldier_id, soldier_name: primary.full_name });
+                                                }
+                                                const dupEquipment = allEquipment.filter(e => e.issued_soldier_id === dup.soldier_id);
+                                                for (const e of dupEquipment) {
+                                                    await Equipment.update(e.id, { issued_soldier_id: primary.soldier_id, issued_soldier_name: primary.full_name });
+                                                }
+                                                await Soldier.delete(dup.id);
+                                                totalMerged++;
+                                            }
+                                        }
+                                        alert(`Merged all groups successfully. Removed ${totalMerged} duplicate record(s).`);
+                                        await scanForDuplicateSoldiers();
+                                    } catch (error) {
+                                        console.error("Error merging all soldiers:", error);
+                                        alert("An error occurred during merge. Check console for details.");
+                                        setDupSoldierStatus('complete');
                                     }
                                 } else {
                                     mergeSoldiers(mergeDialogGroup);
