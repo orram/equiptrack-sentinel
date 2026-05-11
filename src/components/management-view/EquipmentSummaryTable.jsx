@@ -11,8 +11,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import ActualStorageCountInput from "./ActualStorageCountInput";
 
-export default function EquipmentSummaryTable({ data, isLoading, onViewModeChange, language = 'he' }) {
+export default function EquipmentSummaryTable({ data, isLoading, onViewModeChange, language = 'he', actualCountsByType = {}, onActualStorageCountChange }) {
   const [showBySquad, setShowBySquad] = useState(false);
 
   const isHe = language === 'he';
@@ -21,6 +22,10 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
     ? ["במחסן", "הוצא", "תיקון", "סה\"כ"]
     : ["Storage", "Issued", "Repair", "Total"];
   const dataKeys = ['storage', 'issued', 'repair', 'total'];
+  const summarySubHeaders = isHe
+    ? ["במחסן", "ספירה", "הוצא", "תיקון", "סה\"כ"]
+    : ["Storage", "Count", "Issued", "Repair", "Total"];
+  const summaryDataKeys = ['storage', 'actual_storage_count', 'issued', 'repair', 'total'];
 
   const strings = {
     platoonSummaryLabel: isHe ? 'סיכום פלוגתי' : 'Platoon Summary',
@@ -43,6 +48,21 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
     if (onViewModeChange) {
       onViewModeChange(checked);
     }
+  };
+
+  const renderActualCountCell = (type, storageCount, keyPrefix) => {
+    const actualRecord = actualCountsByType[type];
+    const actualValue = actualRecord?.actual_storage_count;
+    const hasMismatch = actualValue !== undefined && actualValue !== null && Number(actualValue) !== Number(storageCount || 0);
+
+    return (
+      <TableCell key={`${keyPrefix}-actual-count`} className={hasMismatch ? "text-center bg-red-100 border border-red-300" : "text-center bg-green-50 border border-green-200"}>
+        <ActualStorageCountInput
+          value={actualValue}
+          onSave={(value) => onActualStorageCountChange?.(type, value)}
+        />
+      </TableCell>
+    );
   };
 
   if (isLoading) {
@@ -92,7 +112,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       {strings.squadPrefix} {squad}
                     </TableHead>
                   ))}
-                  <TableHead colSpan={subHeaders.length} className="text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400">
+                  <TableHead colSpan={summarySubHeaders.length} className="text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400">
                     {strings.platoonTotalHeader}
                   </TableHead>
                 </TableRow>
@@ -102,7 +122,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       {sub}
                     </TableHead>
                   )))}
-                  {subHeaders.map(sub => (
+                  {summarySubHeaders.map(sub => (
                     <TableHead key={`platoon-total-${sub}`} className="text-center text-xs font-semibold text-slate-300 bg-slate-800 border-r">
                       {sub}
                     </TableHead>
@@ -124,10 +144,14 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                         ))}
                       </React.Fragment>
                     ))}
-                    {subHeaders.map((sub, index) => (
-                      <TableCell key={`${type}-platoon-total-${sub}`} className="text-center font-semibold bg-slate-100 border-r">
-                        {tableData[type]?.platoonTotal?.[dataKeys[index]] || 0}
-                      </TableCell>
+                    {summaryDataKeys.map((key) => (
+                      key === 'actual_storage_count'
+                        ? renderActualCountCell(type, tableData[type]?.platoonTotal?.storage || 0, `${type}-platoon-total`)
+                        : (
+                          <TableCell key={`${type}-platoon-total-${key}`} className="text-center font-semibold bg-slate-100 border-r">
+                            {tableData[type]?.platoonTotal?.[key] || 0}
+                          </TableCell>
+                        )
                     ))}
                   </TableRow>
                 ))}
@@ -146,9 +170,9 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                       ))}
                     </React.Fragment>
                   ))}
-                  {subHeaders.map((sub, index) => (
-                    <TableCell key={`total-platoon-total-${sub}`} className="text-center bg-slate-900 text-white border-r">
-                      {platoonTotal?.[dataKeys[index]] || 0}
+                  {summaryDataKeys.map((key) => (
+                    <TableCell key={`total-platoon-total-${key}`} className="text-center bg-slate-900 text-white border-r">
+                      {key === 'actual_storage_count' ? '' : (platoonTotal?.[key] || 0)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -162,15 +186,17 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               <TableHeader>
                 <TableRow className="bg-slate-100">
                   <TableHead className={`${isHe ? 'text-right' : 'text-left'} font-bold text-slate-800`}>{strings.equipmentCol}</TableHead>
-                  {subHeaders.map(h => <TableHead key={h} className="text-center">{h}</TableHead>)}
+                  {summarySubHeaders.map(h => <TableHead key={h} className="text-center">{h}</TableHead>) }
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {equipmentTypes.map(type => (
                   <TableRow key={type}>
                     <TableCell className={isHe ? 'text-right font-medium' : 'text-left font-medium'}>{type}</TableCell>
-                    {dataKeys.map(key => (
-                      <TableCell key={key} className="text-center">{tableData[type].platoonTotal[key]}</TableCell>
+                    {summaryDataKeys.map(key => (
+                      key === 'actual_storage_count'
+                        ? renderActualCountCell(type, tableData[type].platoonTotal.storage, `${type}-summary`)
+                        : <TableCell key={key} className="text-center">{tableData[type].platoonTotal[key]}</TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -178,8 +204,8 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
               <TableFooter>
                 <TableRow className="bg-slate-200 font-bold">
                   <TableCell className={isHe ? 'text-right' : 'text-left'}>{strings.totalRow}</TableCell>
-                  {dataKeys.map(key => (
-                    <TableCell key={key} className="text-center">{platoonTotal[key]}</TableCell>
+                  {summaryDataKeys.map(key => (
+                    <TableCell key={key} className="text-center">{key === 'actual_storage_count' ? '' : platoonTotal[key]}</TableCell>
                   ))}
                 </TableRow>
               </TableFooter>
@@ -212,7 +238,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 {platoon}
               </TableHead>
             ))}
-            <TableHead colSpan={subHeaders.length} className={`text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400`}>
+            <TableHead colSpan={summarySubHeaders.length} className={`text-center font-bold text-white bg-slate-800 border-r-2 border-slate-400`}>
               {strings.grandTotalHeader}
             </TableHead>
           </TableRow>
@@ -231,7 +257,7 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 </TableHead>
               ))
             )}
-            {subHeaders.map((sub, index) => (
+            {summarySubHeaders.map((sub, index) => (
               <TableHead
                 key={`grand-total-${sub}`}
                 className={`text-center text-xs font-semibold text-slate-300 bg-slate-800 border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
@@ -263,13 +289,17 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                   ))}
                 </React.Fragment>
               ))}
-              {subHeaders.map((sub, index) => (
-                <TableCell
-                  key={`${type}-grand-total-${sub}`}
-                  className={`text-center font-semibold bg-slate-100 border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
-                >
-                  {tableData[type]?.grandTotal?.[dataKeys[index]] || 0}
-                </TableCell>
+              {summaryDataKeys.map((key, index) => (
+                key === 'actual_storage_count'
+                  ? renderActualCountCell(type, tableData[type]?.grandTotal?.storage || 0, `${type}-grand-total`)
+                  : (
+                    <TableCell
+                      key={`${type}-grand-total-${key}`}
+                      className={`text-center font-semibold bg-slate-100 border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
+                    >
+                      {tableData[type]?.grandTotal?.[key] || 0}
+                    </TableCell>
+                  )
               ))}
             </TableRow>
           ))}
@@ -295,12 +325,12 @@ export default function EquipmentSummaryTable({ data, isLoading, onViewModeChang
                 ))}
               </React.Fragment>
             ))}
-            {subHeaders.map((sub, index) => (
+            {summaryDataKeys.map((key, index) => (
               <TableCell
-                key={`total-grand-total-${sub}`}
+                key={`total-grand-total-${key}`}
                 className={`text-center bg-slate-900 text-white border-l ${index === 0 ? 'border-l-2 border-slate-400' : ''}`}
               >
-                {grandTotal?.[dataKeys[index]] || 0}
+                {key === 'actual_storage_count' ? '' : (grandTotal?.[key] || 0)}
               </TableCell>
             ))}
           </TableRow>

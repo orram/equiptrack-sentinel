@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Equipment, WeaponControlItem, Soldier } from "@/entities/all";
+import { Equipment, WeaponControlItem, Soldier, ActualStorageCount } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, RefreshCw, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ export default function WeaponControlTable() {
   const [equipment, setEquipment] = useState([]);
   const [weaponControlItems, setWeaponControlItems] = useState([]);
   const [soldiers, setSoldiers] = useState([]);
+  const [actualStorageCounts, setActualStorageCounts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isRateLimited, setIsRateLimited] = useState(false);
@@ -61,10 +62,12 @@ export default function WeaponControlTable() {
       const weaponItemsData = await WeaponControlItem.list();
       await new Promise(resolve => setTimeout(resolve, 500)); // Added artificial delay for Soldier data
       const soldierData = await Soldier.list();
+      const actualCountsData = await ActualStorageCount.list();
       
       setEquipment(equipmentData);
       setWeaponControlItems(weaponItemsData.sort((a, b) => a.display_order - b.display_order));
       setSoldiers(soldierData);
+      setActualStorageCounts(actualCountsData);
       
       const allPlatoons = [...new Set(equipmentData.map(e => String(e.platoon || '').trim()).filter(Boolean))].sort();
       setSelectedPlatoons(allPlatoons);
@@ -206,6 +209,31 @@ export default function WeaponControlTable() {
       return { isSinglePlatoonView: false, tableData, platoons, equipmentTypes, totalsByPlatoon, grandTotal };
     }
   }, [equipment, weaponControlItems, selectedPlatoons, soldiers, language]); // Added 'language' to dependencies for UNASSIGNED_SQUAD_LABEL
+
+  const actualCountsByType = useMemo(() => {
+    return Object.fromEntries(actualStorageCounts.map(item => [item.equipment_name, item]));
+  }, [actualStorageCounts]);
+
+  const handleActualStorageCountChange = async (equipmentName, value) => {
+    const count = Number(value);
+    const today = new Date().toISOString().split('T')[0];
+    const existing = actualCountsByType[equipmentName];
+
+    if (existing) {
+      await ActualStorageCount.update(existing.id, {
+        actual_storage_count: count,
+        last_counted_date: today
+      });
+    } else {
+      await ActualStorageCount.create({
+        equipment_name: equipmentName,
+        actual_storage_count: count,
+        last_counted_date: today
+      });
+    }
+    const actualCountsData = await ActualStorageCount.list();
+    setActualStorageCounts(actualCountsData);
+  };
 
   const handleRefresh = async () => {
     if (isLoading || isRateLimited) return;
@@ -376,6 +404,8 @@ export default function WeaponControlTable() {
               isLoading={isLoading}
               onViewModeChange={setIsDetailedView}
               language={language}
+              actualCountsByType={actualCountsByType}
+              onActualStorageCountChange={handleActualStorageCountChange}
             />
           </CardContent>
         </Card>
