@@ -36,7 +36,7 @@ export function generateGreenReportHtml({ inspection, equipment, wrongItems }) {
   </style>
 </head>
 <body>
-  <div class="actions"><button onclick="window.print()" style="padding:10px 18px;cursor:pointer">הדפס / שמור PDF</button></div>
+  <div class="actions"><button onclick="window.print()" style="padding:10px 18px;cursor:pointer">הדפס / שמור PDF</button><button onclick="window.location.href='/GreenEyeTool'" style="padding:10px 18px;cursor:pointer;margin-right:8px">חזור לירוק בעיניים</button></div>
   <div class="header">
     <h1 class="title">דוח ירוק בעיניים</h1>
     <div>פלוגה ${inspection?.platoon || ""}</div>

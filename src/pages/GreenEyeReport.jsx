@@ -32,8 +32,7 @@ export default function GreenEyeReport() {
       const equipmentData = await Equipment.list("object_name");
       setEquipment(equipmentData);
       const urlPlatoon = new URLSearchParams(window.location.search).get("platoon");
-      const firstPlatoon = PLATOON_ORDER.find(p => equipmentData.some(e => String(e.platoon || "").trim() === p));
-      setSelectedPlatoon(urlPlatoon || firstPlatoon || PLATOON_ORDER[0]);
+      setSelectedPlatoon(urlPlatoon || "");
       setIsLoading(false);
     };
     loadData();
