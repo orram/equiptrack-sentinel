@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Phone, MapPin, Edit, Package, Layers, Trash2 } from "lucide-react";
+import { User, Mail, Phone, MapPin, Edit, Package, Layers, Trash2, History, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function SoldierDetail({ soldier, assignments = [], equipment = [], inventoryItems = [], onEdit, onDelete, t }) {
+  const [showHistory, setShowHistory] = useState(false);
+
   if (!soldier) {
     return (
       <Card>
@@ -17,6 +19,9 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
   }
 
   const activeAssignments = assignments.filter(a => a?.status === 'active');
+  const historyAssignments = assignments
+    .filter(a => a?.status !== 'active')
+    .sort((a, b) => new Date(b.return_date || b.assignment_date) - new Date(a.return_date || a.assignment_date));
 
   const activeSerialized = activeAssignments
     .filter(a => !a.assignment_type || a.assignment_type === 'serialized')
@@ -113,6 +118,53 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
             </div>
           )}
         </div>
+
+        {/* Assignment History */}
+        {historyAssignments.length > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <button
+              className="flex items-center gap-2 w-full text-left text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors"
+              onClick={() => setShowHistory(v => !v)}
+            >
+              <History className="w-4 h-4" />
+              {t?.assignmentHistory || "Assignment History"} ({historyAssignments.length})
+              {showHistory ? <ChevronUp className="w-4 h-4 ml-auto" /> : <ChevronDown className="w-4 h-4 ml-auto" />}
+            </button>
+
+            {showHistory && (
+              <div className="mt-3 space-y-2 max-h-64 overflow-y-auto pr-1">
+                {historyAssignments.map((a, idx) => (
+                  <div key={a.id || idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-medium text-slate-800 truncate">{a.equipment_id}</span>
+                      <Badge
+                        variant="outline"
+                        className={
+                          a.status === 'returned'
+                            ? 'bg-slate-100 text-slate-600 border-slate-200 whitespace-nowrap'
+                            : 'bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap'
+                        }
+                      >
+                        {a.status === 'returned' ? (t?.returned || 'Returned') : (t?.transferred || 'Transferred')}
+                      </Badge>
+                    </div>
+                    <div className="text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                      {a.assignment_date && (
+                        <span>{t?.assigned || 'Assigned'}: {a.assignment_date}</span>
+                      )}
+                      {a.return_date && (
+                        <span>{t?.returned || 'Returned'}: {a.return_date}</span>
+                      )}
+                    </div>
+                    {a.notes && (
+                      <p className="text-slate-400 mt-1 truncate">{a.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
