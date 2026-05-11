@@ -72,6 +72,7 @@ export default function EditEquipmentModal({ equipment, onComplete, onClose, t }
         category: equipment.category,
         acquisition_date: equipment.acquisition_date,
         last_maintenance: equipment.last_maintenance,
+        location_confirmed_date: equipment.location_confirmed_date,
         notes: equipment.notes,
         deletion_reason: deletionReason,
         deletion_date: new Date().toISOString().split('T')[0],

@@ -152,7 +152,7 @@ export default function EquipmentPage() {
     const headers = [
       "Serial Number", "Object Name", "Status", "Condition", "Category", 
       "Platoon", "Squad", "Current Holder", "Holder ID", 
-      "Acquisition Date", "Last Maintenance", "Notes", "Assignment Date"
+      "Acquisition Date", "Last Maintenance", "Location Confirmed", "Notes", "Assignment Date"
     ];
     
     const csvRows = [headers.join(',')];
@@ -181,6 +181,7 @@ export default function EquipmentPage() {
         escapeCsvCell(item.issued_soldier_id),
         escapeCsvCell(item.acquisition_date),
         escapeCsvCell(item.last_maintenance),
+        escapeCsvCell(item.location_confirmed_date),
         escapeCsvCell(item.notes),
         escapeCsvCell(assignments.find(a => a.equipment_id === item.serial_number)?.assignment_date || ''),
       ];

@@ -1,0 +1,100 @@
+{
+  "name": "OldEquipment",
+  "type": "object",
+  "properties": {
+    "original_id": {
+      "type": "string",
+      "description": "Original ID from Equipment table"
+    },
+    "serial_number": {
+      "type": "string",
+      "description": "Unique serial number"
+    },
+    "object_name": {
+      "type": "string",
+      "description": "Name of the equipment item"
+    },
+    "platoon": {
+      "type": "string",
+      "description": "Platoon assignment"
+    },
+    "issued_soldier_name": {
+      "type": "string",
+      "description": "Name of last issued soldier"
+    },
+    "issued_soldier_id": {
+      "type": "string",
+      "description": "ID of last issued soldier"
+    },
+    "assignment_status": {
+      "type": "string",
+      "enum": [
+        "issued",
+        "storage",
+        "repair"
+      ],
+      "description": "Last assignment status"
+    },
+    "squad": {
+      "type": "string",
+      "description": "Squad assignment"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Digital signature or acknowledgment"
+    },
+    "condition": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "fair",
+        "poor"
+      ],
+      "description": "Equipment condition at deletion"
+    },
+    "category": {
+      "type": "string",
+      "description": "Equipment category"
+    },
+    "acquisition_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date equipment was acquired"
+    },
+    "last_maintenance": {
+      "type": "string",
+      "format": "date",
+      "description": "Last maintenance date"
+    },
+    "location_confirmed_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the equipment location was last confirmed"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "deletion_reason": {
+      "type": "string",
+      "description": "Reason for deletion"
+    },
+    "deletion_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date equipment was deleted"
+    },
+    "deleted_by": {
+      "type": "string",
+      "description": "User who deleted the equipment"
+    }
+  },
+  "required": [
+    "original_id",
+    "serial_number",
+    "object_name",
+    "deletion_date",
+    "deleted_by"
+  ]
+}

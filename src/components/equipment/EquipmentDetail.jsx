@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Equipment, Soldier, Assignment } from "@/entities/all";
 import { SendEmail } from "@/integrations/Core";
@@ -16,7 +15,8 @@ import {
   HeartPulse,
   History,
   FileText,
-  MessageSquare
+  MessageSquare,
+  CheckCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import EditEquipmentModal from "./EditEquipmentModal";
@@ -516,6 +516,16 @@ Equipment Management Team 🛡️</p>
     setIsProcessing(false);
   };
 
+  const handleConfirmLocation = async () => {
+    if (!equipment) return;
+    setIsProcessing(true);
+    await Equipment.update(equipment.id, {
+      location_confirmed_date: new Date().toISOString().split('T')[0]
+    });
+    if (onUpdate) onUpdate();
+    setIsProcessing(false);
+  };
+
   const handleEditClick = () => {
     setShowEditModal(true);
   };
@@ -550,6 +560,7 @@ Equipment Management Team 🛡️</p>
     { label: t.category || "Category", value: equipment.category, icon: FileText },
     { label: t.acquisitionDate || "Acquisition Date", value: formatDate(equipment.acquisition_date), icon: Calendar },
     { label: t.lastMaintenance || "Last Maintenance", value: formatDate(equipment.last_maintenance), icon: Wrench },
+    { label: "Location confirmed", value: formatDate(equipment.location_confirmed_date), icon: CheckCircle },
     { label: t.condition || "Condition", value: equipment.condition, icon: HeartPulse },
     {
       label: t.status || "Status",
@@ -608,6 +619,15 @@ Equipment Management Team 🛡️</p>
           </div>
 
           <div className="space-y-2 mb-6">
+            <Button
+              variant="outline"
+              className="w-full border-green-200 text-green-700 hover:bg-green-50"
+              onClick={handleConfirmLocation}
+              disabled={isProcessing}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Location confirmed
+            </Button>
             {equipment.assignment_status === "issued" && (
               <Button
                 className="w-full bg-orange-600 hover:bg-orange-700"
