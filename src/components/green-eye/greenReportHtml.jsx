@@ -7,6 +7,8 @@ const statusLabels = {
 };
 
 export function generateGreenReportHtml({ inspection, equipment, wrongItems }) {
+  const issuedEquipment = equipment.filter(item => item.assignment_status === "issued");
+  const issuedWrongItems = wrongItems.filter(item => (item.assignment_status || item.status) === "issued");
   const statusText = statusLabels[inspection?.status] || "לא נבדק";
   const signature = inspection?.signature_data || inspection?.signature;
 
@@ -42,7 +44,7 @@ export function generateGreenReportHtml({ inspection, equipment, wrongItems }) {
   </div>
   <div class="grid">
     <div class="box"><strong>תאריך בדיקה:</strong> ${inspection?.inspection_date || ""}</div>
-    <div class="box"><strong>סה״כ פריטים:</strong> ${inspection?.total_items || equipment.length}</div>
+    <div class="box"><strong>סה״כ פריטים:</strong> ${issuedEquipment.length}</div>
     <div class="box"><strong>שם מאשר:</strong> ${inspection?.approver_name || ""}</div>
     <div class="box"><strong>דרגה ומ.א:</strong> ${inspection?.approver_rank || ""} | ${inspection?.approver_id || ""}</div>
   </div>
@@ -50,13 +52,13 @@ export function generateGreenReportHtml({ inspection, equipment, wrongItems }) {
   <div class="section">
     <h2>פריטים שסומנו כשגויים</h2>
     <table><thead><tr><th>מספר סידורי</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>
-      ${wrongItems.length ? wrongItems.map(item => `<tr class="bad"><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${statusLabels[item.assignment_status || item.status] || item.assignment_status || item.status || ""}</td></tr>`).join("") : `<tr><td colspan="5">לא סומנו פריטים שגויים</td></tr>`}
+      ${issuedWrongItems.length ? issuedWrongItems.map(item => `<tr class="bad"><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${statusLabels[item.assignment_status || item.status] || item.assignment_status || item.status || ""}</td></tr>`).join("") : `<tr><td colspan="5">לא סומנו פריטים שגויים</td></tr>`}
     </tbody></table>
   </div>
   <div class="section">
     <h2>כל ציוד הפלוגה</h2>
     <table><thead><tr><th>מספר סידורי</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>
-      ${equipment.map(item => `<tr><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${statusLabels[item.assignment_status] || item.assignment_status || ""}</td></tr>`).join("")}
+      ${issuedEquipment.map(item => `<tr><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${statusLabels[item.assignment_status] || item.assignment_status || ""}</td></tr>`).join("")}
     </tbody></table>
   </div>
 </body>
