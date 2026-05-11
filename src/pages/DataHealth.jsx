@@ -1206,19 +1206,19 @@ export default function DataHealth() {
                         {dupSoldierStatus === 'complete' && (
                             <div className="space-y-4">
                                 {dupSoldierGroups.length === 0 ? (
-                                    <p className="text-green-600 font-semibold">✓ No duplicate soldier IDs found!</p>
+                                    <p className="text-green-600 font-semibold">{dh.noDuplicateSoldiers}</p>
                                 ) : (
                                     <div className="space-y-3">
-                                        <p className="text-indigo-600 font-semibold">{dupSoldierGroups.length} duplicate group(s) found:</p>
+                                        <p className="text-indigo-600 font-semibold">{dh.duplicateGroupsFound(dupSoldierGroups.length)}</p>
                                         <Button
                                             className="bg-indigo-600 hover:bg-indigo-700 w-full"
                                             onClick={() => setMergeDialogGroup('all')}
                                         >
-                                            Merge All Groups (keep oldest record in each)
+                                            {dh.mergeAll}
                                         </Button>
                                         {dupSoldierGroups.map(group => (
                                             <div key={group.soldier_id} className="border rounded-lg p-4 bg-indigo-50">
-                                                <p className="font-semibold text-slate-800 mb-2">Soldier ID: <code className="bg-white px-2 py-0.5 rounded border">{group.soldier_id}</code> — {group.soldiers.length} records</p>
+                                                <p className="font-semibold text-slate-800 mb-2">{isHe ? 'מ.א:' : 'Soldier ID:'} <code className="bg-white px-2 py-0.5 rounded border">{group.soldier_id}</code> — {group.soldiers.length} {isHe ? 'רשומות' : 'records'}</p>
                                                 <div className="space-y-2 mb-3">
                                                     {group.soldiers.map(s => (
                                                         <label key={s.id} className="flex items-center gap-3 bg-white p-3 rounded border cursor-pointer">
@@ -1233,7 +1233,7 @@ export default function DataHealth() {
                                                                 <p className="text-xs text-slate-500">{s.rank} · {s.platoon} / {s.squad} · Created: {new Date(s.created_date).toLocaleDateString()}</p>
                                                             </div>
                                                             {mergeSelections[group.soldier_id] === s.id && (
-                                                                <Badge className="bg-indigo-600 text-white text-xs">Keep (Primary)</Badge>
+                                                                <Badge className="bg-indigo-600 text-white text-xs">{dh.keepPrimary}</Badge>
                                                             )}
                                                         </label>
                                                     ))}
@@ -1243,13 +1243,13 @@ export default function DataHealth() {
                                                     className="bg-indigo-600 hover:bg-indigo-700"
                                                     onClick={() => setMergeDialogGroup(group)}
                                                 >
-                                                    Merge → Keep Selected Primary
+                                                    {dh.mergeKeepSelected}
                                                 </Button>
                                             </div>
                                         ))}
                                     </div>
                                 )}
-                                <Button onClick={scanForDuplicateSoldiers} variant="outline" size="sm">Rescan</Button>
+                                <Button onClick={scanForDuplicateSoldiers} variant="outline" size="sm">{dh.rescan}</Button>
                             </div>
                         )}
                     </CardContent>
@@ -1259,22 +1259,22 @@ export default function DataHealth() {
                 <Dialog open={!!mergeDialogGroup} onOpenChange={() => setMergeDialogGroup(null)}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Confirm Soldier Merge</DialogTitle>
+                            <DialogTitle>{dh.confirmMergeTitle}</DialogTitle>
                             <DialogDescription>
-                                All assignments and equipment linked to the duplicate record(s) will be re-pointed to the primary soldier. Duplicate records will be deleted. This cannot be undone.
+                                {dh.confirmMergeDesc}
                             </DialogDescription>
                         </DialogHeader>
                         {mergeDialogGroup === 'all' ? (
                             <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
-                                <p className="font-semibold text-indigo-700">Will merge all {dupSoldierGroups.length} group(s), keeping the oldest record in each:</p>
+                                <p className="font-semibold text-indigo-700">{dh.mergeAllWillMerge(dupSoldierGroups.length)}</p>
                                 {dupSoldierGroups.map(group => {
                                     const sorted = [...group.soldiers].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
                                     const primary = sorted[0];
                                     const dups = sorted.slice(1);
                                     return (
                                         <div key={group.soldier_id} className="bg-slate-50 p-2 rounded border text-xs">
-                                            <p><span className="text-indigo-700 font-semibold">Keep:</span> {primary.full_name} ({primary.rank})</p>
-                                            <p><span className="text-red-600 font-semibold">Delete:</span> {dups.map(d => d.full_name).join(', ')}</p>
+                                            <p><span className="text-indigo-700 font-semibold">{dh.keep}:</span> {primary.full_name} ({primary.rank})</p>
+                                            <p><span className="text-red-600 font-semibold">{dh.delete}:</span> {dups.map(d => d.full_name).join(', ')}</p>
                                         </div>
                                     );
                                 })}
@@ -1285,18 +1285,18 @@ export default function DataHealth() {
                             return (
                                 <div className="space-y-3 text-sm">
                                     <div className="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
-                                        <p className="font-semibold text-indigo-800">Primary (keep):</p>
+                                        <p className="font-semibold text-indigo-800">{isHe ? 'ראשי (שמור):' : 'Primary (keep):'}</p>
                                         <p>{primary?.full_name} · {primary?.rank} · {primary?.platoon}</p>
                                     </div>
                                     <div className="bg-red-50 p-3 rounded-lg border border-red-200">
-                                        <p className="font-semibold text-red-700">Will be deleted ({dups.length}):</p>
+                                        <p className="font-semibold text-red-700">{isHe ? `יימחק (${dups.length}):` : `Will be deleted (${dups.length}):`}</p>
                                         {dups.map(d => <p key={d.id}>{d.full_name} · {d.rank} · {d.platoon}</p>)}
                                     </div>
                                 </div>
                             );
                         })()}
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setMergeDialogGroup(null)}>Cancel</Button>
+                            <Button variant="outline" onClick={() => setMergeDialogGroup(null)}>{dh.cancelBtn}</Button>
                             <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={async () => {
                                 if (mergeDialogGroup === 'all') {
                                     setMergeDialogGroup(null);
@@ -1335,7 +1335,7 @@ export default function DataHealth() {
                                 } else {
                                     mergeSoldiers(mergeDialogGroup);
                                 }
-                            }}>Confirm Merge</Button>
+                            }}>{dh.confirmMerge}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -1345,27 +1345,27 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <DatabaseZap className="w-5 h-5"/>
-                           One-Time Data Migration
+                           {dh.migrationTitle}
                         </CardTitle>
-                        <CardDescription>Update equipment data from 'assigned' to 'issued' status and fields. Run this only once after an update.</CardDescription>
+                        <CardDescription>{dh.migrationDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {migrationStatus === 'idle' && (
-                            <Button onClick={runEquipmentMigration}>Run Equipment Data Migration</Button>
+                            <Button onClick={runEquipmentMigration}>{dh.runMigration}</Button>
                         )}
                         {migrationStatus === 'processing' && (
-                           <p className="text-slate-600">Processing... Please wait.</p>
+                           <p className="text-slate-600">{dh.scanning}</p>
                         )}
                         {migrationStatus === 'complete' && (
                             <div className="space-y-1">
-                                <p className="font-semibold text-green-600">Migration Complete!</p>
-                                <p>Items Scanned: {migrationResults.scanned}</p>
-                                <p>Items Updated: {migrationResults.updated}</p>
-                                <p>Errors: {migrationResults.errors}</p>
+                                <p className="font-semibold text-green-600">{dh.migrationComplete}</p>
+                                <p>{dh.itemsScanned}: {migrationResults.scanned}</p>
+                                <p>{dh.itemsUpdated}: {migrationResults.updated}</p>
+                                <p>{dh.errors}: {migrationResults.errors}</p>
                             </div>
                         )}
                         {migrationStatus === 'error' && (
-                           <p className="font-semibold text-red-600">An error occurred during migration. Check the console for details.</p>
+                           <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -1374,21 +1374,21 @@ export default function DataHealth() {
                 <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Remove Duplicate Assignment</DialogTitle>
+                            <DialogTitle>{dh.removeAssignment}</DialogTitle>
                             <DialogDescription>
-                                Mark this assignment as returned to resolve the duplicate. The equipment will remain in inventory.
+                                {dh.removeAssignmentDesc}
                             </DialogDescription>
                         </DialogHeader>
                         {assignmentToDelete && (
                             <div className="bg-slate-50 p-4 rounded-lg mb-4">
-                                <p className="text-sm"><strong>Equipment:</strong> {assignmentToDelete.equipment_id}</p>
-                                <p className="text-sm"><strong>Soldier:</strong> {assignmentToDelete.soldier_name}</p>
-                                <p className="text-sm"><strong>Assignment Date:</strong> {new Date(assignmentToDelete.assignment_date).toLocaleDateString()}</p>
+                                <p className="text-sm"><strong>{isHe ? 'ציוד' : 'Equipment'}:</strong> {assignmentToDelete.equipment_id}</p>
+                                <p className="text-sm"><strong>{isHe ? 'חייל' : 'Soldier'}:</strong> {assignmentToDelete.soldier_name}</p>
+                                <p className="text-sm"><strong>{dh.assignedDate}:</strong> {new Date(assignmentToDelete.assignment_date).toLocaleDateString()}</p>
                             </div>
                         )}
                         <DialogFooter>
-                            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                            <Button variant="destructive" onClick={handleDeleteAssignment}>Remove Assignment</Button>
+                            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{dh.cancelBtn}</Button>
+                            <Button variant="destructive" onClick={handleDeleteAssignment}>{dh.removeAssignmentBtn}</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
