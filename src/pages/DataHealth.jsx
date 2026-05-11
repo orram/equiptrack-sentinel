@@ -55,14 +55,30 @@ export default function DataHealth() {
                 Equipment.filter({ assignment_status: 'issued' }),
                 Soldier.list(),
             ]);
-            const soldierIdSet = new Set(allSoldiers.map(s => s.soldier_id));
+            const soldierById = {};
+            const soldierByName = {};
+            allSoldiers.forEach(s => {
+                if (s.soldier_id) soldierById[s.soldier_id] = s;
+                if (s.full_name) soldierByName[s.full_name.toLowerCase().trim()] = s;
+            });
+
             const results = [];
 
             for (const item of allEquipment) {
                 if (!item.issued_soldier_id) continue;
-                if (soldierIdSet.has(item.issued_soldier_id)) continue;
 
-                // ID not found — search by name
+                const soldierByIdMatch = soldierById[item.issued_soldier_id];
+
+                // Case 1: ID not found at all
+                // Case 2: ID found but name doesn't match (stale/wrong ID)
+                const idMissing = !soldierByIdMatch;
+                const idMismatch = soldierByIdMatch &&
+                    item.issued_soldier_name &&
+                    soldierByIdMatch.full_name?.toLowerCase().trim() !== item.issued_soldier_name.toLowerCase().trim();
+
+                if (!idMissing && !idMismatch) continue;
+
+                // Build suggestions by name
                 const name = (item.issued_soldier_name || '').toLowerCase().trim();
                 const suggestions = name
                     ? allSoldiers.filter(s =>
@@ -71,7 +87,17 @@ export default function DataHealth() {
                       )
                     : [];
 
-                results.push({ equipment: item, suggestions });
+                // For mismatch, also include the soldier the name actually resolves to (if different)
+                if (idMismatch && soldierByName[name] && !suggestions.find(s => s.id === soldierByName[name].id)) {
+                    suggestions.unshift(soldierByName[name]);
+                }
+
+                results.push({
+                    equipment: item,
+                    suggestions,
+                    issueType: idMissing ? 'id_not_found' : 'id_name_mismatch',
+                    currentSoldier: idMismatch ? soldierByIdMatch : null,
+                });
             }
 
             setUnknownHolderItems(results);
@@ -691,16 +717,22 @@ export default function DataHealth() {
                                 ) : (
                                     <div className="space-y-4">
                                         <p className="text-rose-600 font-semibold">{unknownHolderItems.length} item(s) have an unrecognized holder ID:</p>
-                                        {unknownHolderItems.map(({ equipment, suggestions }) => (
+                                        {unknownHolderItems.map(({ equipment, suggestions, issueType, currentSoldier }) => (
                                             <div key={equipment.id} className="border rounded-lg p-4 bg-rose-50">
                                                 <div className="mb-2">
                                                     <p className="font-semibold text-slate-900">
                                                         <code className="bg-white px-1 rounded border text-sm">{equipment.serial_number}</code> — {equipment.object_name}
                                                     </p>
-                                                    <p className="text-sm text-rose-700 mt-1">
-                                                        Holder ID <strong>{equipment.issued_soldier_id}</strong> not found
-                                                        {equipment.issued_soldier_name && <> · Name on record: <strong>{equipment.issued_soldier_name}</strong></>}
-                                                    </p>
+                                                    {issueType === 'id_name_mismatch' ? (
+                                                        <p className="text-sm text-rose-700 mt-1">
+                                                            ID <strong>{equipment.issued_soldier_id}</strong> belongs to <strong>{currentSoldier?.full_name}</strong>, but name on record is <strong>{equipment.issued_soldier_name}</strong> — likely a stale ID.
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-sm text-rose-700 mt-1">
+                                                            Holder ID <strong>{equipment.issued_soldier_id}</strong> not found
+                                                            {equipment.issued_soldier_name && <> · Name on record: <strong>{equipment.issued_soldier_name}</strong></>}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 {suggestions.length > 0 ? (
                                                     <div>

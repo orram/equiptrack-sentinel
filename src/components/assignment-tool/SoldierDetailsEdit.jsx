@@ -32,20 +32,27 @@ export default function SoldierDetailsEdit({ soldier, onSave, onBack, t }) {
       await Soldier.update(soldier.id, soldierData);
 
       // Sync platoon/squad/name on all equipment currently issued to this soldier
+      // Match by EITHER soldier_id OR soldier_name to catch stale/mismatched records
       const platoonChanged = soldierData.platoon !== soldier.platoon;
       const squadChanged = soldierData.squad !== soldier.squad;
       const nameChanged = soldierData.full_name !== soldier.full_name;
       const idChanged2 = soldierData.soldier_id !== soldier.soldier_id;
 
       if (platoonChanged || squadChanged || nameChanged || idChanged2) {
-        const allEquipment = await Equipment.filter({ issued_soldier_id: soldier.soldier_id });
-        const updatePayload = {};
-        if (platoonChanged) updatePayload.platoon = soldierData.platoon;
-        if (squadChanged) updatePayload.squad = soldierData.squad;
-        if (nameChanged) updatePayload.issued_soldier_name = soldierData.full_name;
-        if (idChanged2) updatePayload.issued_soldier_id = soldierData.soldier_id;
+        const allIssuedEquipment = await Equipment.filter({ assignment_status: 'issued' });
+        const matchedEquipment = allIssuedEquipment.filter(item =>
+          item.issued_soldier_id === soldier.soldier_id ||
+          (item.issued_soldier_name && item.issued_soldier_name === soldier.full_name)
+        );
 
-        for (const item of allEquipment) {
+        const updatePayload = {
+          issued_soldier_id: soldierData.soldier_id,
+          issued_soldier_name: soldierData.full_name,
+          platoon: soldierData.platoon,
+          squad: soldierData.squad,
+        };
+
+        for (const item of matchedEquipment) {
           await Equipment.update(item.id, updatePayload);
         }
       }

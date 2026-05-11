@@ -33,12 +33,20 @@ export default function EditSoldierForm({ soldier, onSave, onCancel, t }) {
       const idChanged = soldierData.soldier_id !== soldier.soldier_id;
 
       if (nameChanged || platoonChanged || squadChanged || idChanged) {
-        const issuedEquipment = await Equipment.filter({ issued_soldier_id: soldier.soldier_id });
-        const updatePayload = {};
-        if (nameChanged) updatePayload.issued_soldier_name = soldierData.full_name;
-        if (platoonChanged) updatePayload.platoon = soldierData.platoon;
-        if (squadChanged) updatePayload.squad = soldierData.squad;
-        if (idChanged) updatePayload.issued_soldier_id = soldierData.soldier_id;
+        // Fetch all issued equipment and match by EITHER soldier_id OR soldier_name
+        // to catch equipment with stale/mismatched IDs
+        const allIssuedEquipment = await Equipment.filter({ assignment_status: 'issued' });
+        const issuedEquipment = allIssuedEquipment.filter(item =>
+          item.issued_soldier_id === soldier.soldier_id ||
+          (item.issued_soldier_name && item.issued_soldier_name === soldier.full_name)
+        );
+
+        const updatePayload = {
+          issued_soldier_id: soldierData.soldier_id,
+          issued_soldier_name: soldierData.full_name,
+          platoon: soldierData.platoon,
+          squad: soldierData.squad,
+        };
 
         for (const item of issuedEquipment) {
           await Equipment.update(item.id, updatePayload);
