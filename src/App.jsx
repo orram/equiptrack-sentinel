@@ -22,6 +22,7 @@ import Settings from './pages/Settings';
 import Inventory from './pages/Inventory';
 import UserProfile from './pages/UserProfile';
 import SupplantingItems from './pages/SupplantingItems';
+import GreenEyeTool from './pages/GreenEyeTool';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/Inventory" element={<Inventory />} />
         <Route path="/UserProfile" element={<UserProfile />} />
         <Route path="/SupplantingItems" element={<SupplantingItems />} />
+        <Route path="/GreenEyeTool" element={<GreenEyeTool />} />
         {/* Add your page Route elements here */}
       </Route>
       <Route path="*" element={<PageNotFound />} />

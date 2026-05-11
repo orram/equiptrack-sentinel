@@ -1,0 +1,55 @@
+{
+  "name": "GreenInspection",
+  "type": "object",
+  "properties": {
+    "platoon": {
+      "type": "string",
+      "description": "Platoon that was inspected"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "not_approved"
+      ],
+      "description": "Inspection approval status"
+    },
+    "inspection_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of inspection approval"
+    },
+    "approver_name": {
+      "type": "string",
+      "description": "Name of the person approving the inspection"
+    },
+    "approver_rank": {
+      "type": "string",
+      "description": "Rank of the person approving the inspection"
+    },
+    "approver_id": {
+      "type": "string",
+      "description": "ID number of the person approving the inspection"
+    },
+    "signature_data": {
+      "type": "string",
+      "description": "Signature image data URL"
+    },
+    "wrong_items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Equipment items marked as wrongly assigned"
+    },
+    "total_items": {
+      "type": "number",
+      "description": "Total equipment items checked"
+    }
+  },
+  "required": [
+    "platoon",
+    "status",
+    "inspection_date"
+  ]
+}
