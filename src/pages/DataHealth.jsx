@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Equipment, Assignment, Soldier } from "@/entities/all";
 import { RefreshCw } from "lucide-react";
+import { useLanguage } from "@/lib/language";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,92 @@ import {
 
 export default function DataHealth() {
     const navigate = useNavigate();
+    const { language } = useLanguage();
+    const isHe = language === 'he';
+    const dh = {
+        title: isHe ? "תקינות נתונים וכלים" : "Data Health & Tools",
+        subtitle: isHe ? "הפעל משימות תחזוקה והגירת נתונים." : "Run maintenance and migration tasks.",
+        unknownHolderTitle: isHe ? "בדיקת מזהה מחזיק לא מוכר" : "Unknown Holder ID Check",
+        unknownHolderDesc: isHe ? "מצא ציוד מנופק שמזהה המחזיק שלו לא תואם לאף רשומת חייל. מציע התאמות לפי שם." : "Find issued equipment whose holder ID doesn't match any soldier record. Suggests matches by name.",
+        scanUnknownHolders: isHe ? "סרוק מחזיקים לא מוכרים" : "Scan for Unknown Holders",
+        scanning: isHe ? "סורק... אנא המתן." : "Scanning... Please wait.",
+        allHolderIdsValid: isHe ? "✓ כל מזהי המחזיקים תקינים!" : "✓ All holder IDs are valid!",
+        itemsUnrecognizedHolder: (n) => isHe ? `${n} פריטים עם מזהה מחזיק לא מוכר:` : `${n} item(s) have an unrecognized holder ID:`,
+        possibleMatchesByName: isHe ? "התאמות אפשריות לפי שם:" : "Possible matches by name:",
+        useThisSoldier: isHe ? "השתמש בחייל זה" : "Use This Soldier",
+        updating: isHe ? "מעדכן..." : "Updating...",
+        noNameMatches: isHe ? "לא נמצאו התאמות שם. עדכן ידנית בדף הציוד." : "No name matches found. Update manually in the Equipment page.",
+        rescan: isHe ? "סרוק מחדש" : "Rescan",
+        errorOccurred: isHe ? "אירעה שגיאה. בדוק את הקונסול." : "An error occurred. Check the console.",
+        soldierSyncTitle: isHe ? "סנכרון פרטי חייל" : "Soldier Info Sync",
+        soldierSyncDesc: isHe ? "בדוק את כל הציוד המנופק ועדכן שם חייל, פלוגה ומחלקה אם אינם תואמים לפרטי החייל הנוכחיים." : "Check all issued equipment and update soldier name, platoon, and squad if they don't match the soldier's current info.",
+        checkAndUpdate: isHe ? "בדוק ועדכן ציוד" : "Check & Update Equipment",
+        scanningAndUpdating: isHe ? "סורק ומעדכן... אנא המתן." : "Scanning and updating... Please wait.",
+        checked: isHe ? "נבדק" : "Checked",
+        updated: isHe ? "עודכן" : "Updated",
+        allUpToDate: isHe ? "✓ כל פרטי הציוד מעודכנים!" : "✓ All equipment info is up to date!",
+        runAgain: isHe ? "הפעל שוב" : "Run Again",
+        lastWeekTitle: isHe ? "סנכרון הנפקות נשק מהשבוע האחרון" : "Last Week Weapon Assignment Sync",
+        lastWeekDesc: isHe ? "מצא חיילים שהונפק להם ציוד ב-7 הימים האחרונים עם נשק שעדיין במחסן, והנפק אותם בכמות." : "Find soldiers assigned equipment in the last 7 days with weapons still in storage, and bulk issue those weapons.",
+        scanLastWeek: isHe ? "סרוק הנפקות השבוע האחרון" : "Scan Last Week's Assignments",
+        noConflictsFound: isHe ? "✓ לא נמצאו קונפליקטים!" : "✓ No conflicts found!",
+        weaponsLastWeekStorage: (n) => isHe ? `${n} נשק/ים הוקצו ב-7 הימים האחרונים אך עדיין מסומנים כמחסן:` : `${n} weapon(s) assigned in last 7 days but still marked as storage:`,
+        assignSelected: (n) => isHe ? `הנפק ${n} נשק/ים נבחרים` : `Assign Selected ${n} Weapon(s)`,
+        todayTitle: isHe ? "סנכרון הנפקות נשק היום" : "Today's Weapon Assignment Sync",
+        todayDesc: isHe ? "מצא חיילים שהונפק להם ציוד היום עם נשק שעדיין במחסן, והנפק אותם בכמות." : "Find soldiers assigned equipment today with weapons still in storage, and bulk issue those weapons.",
+        scanToday: isHe ? "סרוק הנפקות היום" : "Scan Today's Assignments",
+        weaponsTodayStorage: (n) => isHe ? `${n} נשק/ים הוקצו היום אך עדיין מסומנים כמחסן:` : `${n} weapon(s) assigned today but still marked as storage:`,
+        conflictTitle: isHe ? "זיהוי קונפליקט מחסן מול פעיל" : "Storage vs Active Conflict Detection",
+        conflictDesc: isHe ? 'מצא ציוד המסומן כ"מחסן" אך מוקצה לחיילים פעילים.' : 'Find equipment marked as "storage" but assigned to active soldiers.',
+        scanConflicts: isHe ? "סרוק קונפליקטים" : "Scan for Conflicts",
+        itemsStorageButAssigned: (n) => isHe ? `${n} פריטים מסומנים כמחסן אך מוקצים באופן פעיל:` : `${n} item(s) marked as storage but actively assigned:`,
+        assignedTo: isHe ? "מוקצה ל" : "Assigned to",
+        markAsReturned: isHe ? "סמן כהוחזר" : "Mark as Returned",
+        duplicateTitle: isHe ? "זיהוי הנפקות כפולות" : "Duplicate Assignment Detection",
+        duplicateDesc: isHe ? "סרוק ציוד המנופק לכמה חיילים בו-זמנית." : "Scan for equipment assigned to multiple soldiers simultaneously.",
+        scanDuplicates: isHe ? "סרוק כפולות" : "Scan for Duplicates",
+        noDuplicatesFound: isHe ? "✓ לא נמצאו כפולות!" : "✓ No duplicates found!",
+        duplicateSoldierTitle: isHe ? "זיהוי מספר אישי כפול" : "Duplicate Soldier ID Detection",
+        duplicateSoldierDesc: isHe ? "מצא חיילים עם אותו מ.א, אמת ומזג אותם לרשומה אחת." : "Find soldiers sharing the same ID, validate, and merge them into one record.",
+        scanDuplicateSoldiers: isHe ? "סרוק חיילים כפולים" : "Scan for Duplicate Soldiers",
+        noDuplicateSoldiers: isHe ? "✓ לא נמצאו מ.א כפולים!" : "✓ No duplicate soldier IDs found!",
+        duplicateGroupsFound: (n) => isHe ? `נמצאו ${n} קבוצות כפולות:` : `${n} duplicate group(s) found:`,
+        mergeAll: isHe ? "מזג את כל הקבוצות (שמור את הישנה בכל קבוצה)" : "Merge All Groups (keep oldest record in each)",
+        merging: isHe ? "ממזג רשומות... אנא המתן." : "Merging records... Please wait.",
+        keepPrimary: isHe ? "שמור (ראשי)" : "Keep (Primary)",
+        mergeKeepSelected: isHe ? "מזג ← שמור ראשי נבחר" : "Merge → Keep Selected Primary",
+        confirmMergeTitle: isHe ? "אישור מיזוג חיילים" : "Confirm Soldier Merge",
+        confirmMergeDesc: isHe ? "כל ההנפקות והציוד המקושרים לרשומות הכפולות יועברו לחייל הראשי. הרשומות הכפולות יימחקו. לא ניתן לבטל פעולה זו." : "All assignments and equipment linked to the duplicate record(s) will be re-pointed to the primary soldier. Duplicate records will be deleted. This cannot be undone.",
+        mergeAllWillMerge: (n) => isHe ? `ימזג ${n} קבוצות, ישמור את הרשומה הישנה בכל:` : `Will merge all ${n} group(s), keeping the oldest record in each:`,
+        keep: isHe ? "שמור" : "Keep",
+        delete: isHe ? "מחק" : "Delete",
+        confirmMerge: isHe ? "אשר מיזוג" : "Confirm Merge",
+        migrationTitle: isHe ? "הגירת נתונים חד-פעמית" : "One-Time Data Migration",
+        migrationDesc: isHe ? "עדכן נתוני ציוד מסטטוס 'assigned' ל-'issued' ושדות נלווים. הפעל פעם אחת בלבד לאחר עדכון." : "Update equipment data from 'assigned' to 'issued' status and fields. Run this only once after an update.",
+        runMigration: isHe ? "הפעל הגירת נתוני ציוד" : "Run Equipment Data Migration",
+        migrationComplete: isHe ? "הגירה הושלמה!" : "Migration Complete!",
+        itemsScanned: isHe ? "פריטים שנסרקו" : "Items Scanned",
+        itemsUpdated: isHe ? "פריטים שעודכנו" : "Items Updated",
+        errors: isHe ? "שגיאות" : "Errors",
+        removeAssignment: isHe ? "הסר הנפקה כפולה" : "Remove Duplicate Assignment",
+        removeAssignmentDesc: isHe ? "סמן הנפקה זו כהוחזרה כדי לפתור את הכפילות. הציוד יישאר במלאי." : "Mark this assignment as returned to resolve the duplicate. The equipment will remain in inventory.",
+        removeAssignmentBtn: isHe ? "הסר הנפקה" : "Remove Assignment",
+        cancelBtn: isHe ? "ביטול" : "Cancel",
+        idNotFoundMsg: (id) => isHe ? `מזהה מחזיק ${id} לא נמצא` : `Holder ID ${id} not found`,
+        idMismatchMsg: (id, soldierName, recordName) => isHe ? `מזהה ${id} שייך ל${soldierName} אך השם ברשומה הוא ${recordName} — ככל הנראה מזהה ישן.` : `ID ${id} belongs to ${soldierName}, but name on record is ${recordName} — likely a stale ID.`,
+        nameOnRecord: isHe ? "שם ברשומה" : "Name on record",
+        assignedDate: isHe ? "הוקצה" : "Assigned",
+        activeAssignments: isHe ? "הנפקות פעילות" : "active assignments",
+        showDetails: isHe ? "הצג פרטים" : "Show Details",
+        hideDetails: isHe ? "הסתר פרטים" : "Hide Details",
+        latest: isHe ? "(אחרון)" : "(Latest)",
+        remove: isHe ? "הסר" : "Remove",
+        bulkRemove: (n) => isHe ? `הסרה בכמות (${n} פריטים)` : `Bulk Remove (${n} items)`,
+        removing: isHe ? "מסיר..." : "Removing...",
+        sameSoldierDups: (n) => isHe ? `נמצאו ${n} מקרים עם אותו חייל מנופק באותו יום:` : `Found ${n} case(s) with same soldier assigned on same day:`,
+        itemsStorageConflict: (n) => isHe ? `${n} נשק/ים הוקצו אך עדיין מסומנים כמחסן:` : `${n} weapon(s) assigned but still marked as storage:`,
+    };
+
     const [migrationStatus, setMigrationStatus] = useState('idle'); // idle, processing, complete, error
     const [migrationResults, setMigrationResults] = useState({ scanned: 0, updated: 0, errors: 0 });
     const [duplicateStatus, setDuplicateStatus] = useState('idle'); // idle, scanning, complete
@@ -688,8 +775,8 @@ export default function DataHealth() {
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">Data Health & Tools</h1>
-                        <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
+                        <h1 className="text-3xl font-bold text-slate-900">{dh.title}</h1>
+                        <p className="text-slate-600 mt-1">{dh.subtitle}</p>
                     </div>
                 </div>
 
@@ -698,25 +785,25 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <AlertCircle className="w-5 h-5 text-rose-600"/>
-                            Unknown Holder ID Check
+                            {dh.unknownHolderTitle}
                         </CardTitle>
-                        <CardDescription>Find issued equipment whose holder ID doesn't match any soldier record. Suggests matches by name.</CardDescription>
+                        <CardDescription>{dh.unknownHolderDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {(unknownHolderStatus === 'idle' || unknownHolderStatus === 'error') && (
                             <div className="space-y-2">
-                                <Button onClick={scanForUnknownHolders} variant="outline">Scan for Unknown Holders</Button>
-                                {unknownHolderStatus === 'error' && <p className="text-red-600 text-sm font-semibold">An error occurred. Check the console.</p>}
+                                <Button onClick={scanForUnknownHolders} variant="outline">{dh.scanUnknownHolders}</Button>
+                                {unknownHolderStatus === 'error' && <p className="text-red-600 text-sm font-semibold">{dh.errorOccurred}</p>}
                             </div>
                         )}
-                        {unknownHolderStatus === 'scanning' && <p className="text-slate-600">Scanning... Please wait.</p>}
+                        {unknownHolderStatus === 'scanning' && <p className="text-slate-600">{dh.scanning}</p>}
                         {unknownHolderStatus === 'complete' && (
                             <div className="space-y-4">
                                 {unknownHolderItems.length === 0 ? (
-                                    <p className="text-green-600 font-semibold">✓ All holder IDs are valid!</p>
+                                    <p className="text-green-600 font-semibold">{dh.allHolderIdsValid}</p>
                                 ) : (
                                     <div className="space-y-4">
-                                        <p className="text-rose-600 font-semibold">{unknownHolderItems.length} item(s) have an unrecognized holder ID:</p>
+                                        <p className="text-rose-600 font-semibold">{dh.itemsUnrecognizedHolder(unknownHolderItems.length)}</p>
                                         {unknownHolderItems.map(({ equipment, suggestions, issueType, currentSoldier }) => (
                                             <div key={equipment.id} className="border rounded-lg p-4 bg-rose-50">
                                                 <div className="mb-2">
@@ -725,18 +812,18 @@ export default function DataHealth() {
                                                     </p>
                                                     {issueType === 'id_name_mismatch' ? (
                                                         <p className="text-sm text-rose-700 mt-1">
-                                                            ID <strong>{equipment.issued_soldier_id}</strong> belongs to <strong>{currentSoldier?.full_name}</strong>, but name on record is <strong>{equipment.issued_soldier_name}</strong> — likely a stale ID.
+                                                            {dh.idMismatchMsg(equipment.issued_soldier_id, currentSoldier?.full_name, equipment.issued_soldier_name)}
                                                         </p>
                                                     ) : (
                                                         <p className="text-sm text-rose-700 mt-1">
-                                                            Holder ID <strong>{equipment.issued_soldier_id}</strong> not found
-                                                            {equipment.issued_soldier_name && <> · Name on record: <strong>{equipment.issued_soldier_name}</strong></>}
+                                                            {dh.idNotFoundMsg(equipment.issued_soldier_id)}
+                                                            {equipment.issued_soldier_name && <> · {dh.nameOnRecord}: <strong>{equipment.issued_soldier_name}</strong></>}
                                                         </p>
                                                     )}
                                                 </div>
                                                 {suggestions.length > 0 ? (
-                                                    <div>
-                                                        <p className="text-xs text-slate-600 mb-2 font-medium">Possible matches by name:</p>
+                                                <div>
+                                                    <p className="text-xs text-slate-600 mb-2 font-medium">{dh.possibleMatchesByName}</p>
                                                         <div className="space-y-2">
                                                             {suggestions.map(s => (
                                                                 <div key={s.id} className="flex items-center justify-between bg-white p-2 rounded border">
@@ -750,20 +837,20 @@ export default function DataHealth() {
                                                                         className="bg-rose-600 hover:bg-rose-700"
                                                                         onClick={() => applyHolderFix(equipment, s)}
                                                                     >
-                                                                        {applyingFix === equipment.id ? 'Updating...' : 'Use This Soldier'}
+                                                                        {applyingFix === equipment.id ? dh.updating : dh.useThisSoldier}
                                                                     </Button>
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     </div>
                                                 ) : (
-                                                    <p className="text-xs text-slate-500 italic">No name matches found. Update manually in the Equipment page.</p>
+                                                    <p className="text-xs text-slate-500 italic">{dh.noNameMatches}</p>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
                                 )}
-                                <Button onClick={scanForUnknownHolders} variant="outline" size="sm">Rescan</Button>
+                                <Button onClick={scanForUnknownHolders} variant="outline" size="sm">{dh.rescan}</Button>
                             </div>
                         )}
                     </CardContent>
@@ -774,27 +861,27 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <RefreshCw className="w-5 h-5 text-teal-600"/>
-                            Soldier Info Sync
+                            {dh.soldierSyncTitle}
                         </CardTitle>
-                        <CardDescription>Check all issued equipment and update soldier name, platoon, and squad if they don't match the soldier's current info.</CardDescription>
+                        <CardDescription>{dh.soldierSyncDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {soldierSyncStatus === 'idle' && (
-                            <Button onClick={runSoldierInfoSync} variant="outline">Check & Update Equipment</Button>
+                            <Button onClick={runSoldierInfoSync} variant="outline">{dh.checkAndUpdate}</Button>
                         )}
                         {soldierSyncStatus === 'scanning' && (
-                            <p className="text-slate-600">Scanning and updating... Please wait.</p>
+                            <p className="text-slate-600">{dh.scanningAndUpdating}</p>
                         )}
                         {soldierSyncStatus === 'complete' && (
                             <div className="space-y-3">
                                 <div className="flex gap-4 text-sm">
-                                    <span className="text-slate-600">Checked: <strong>{soldierSyncResults.checked}</strong></span>
+                                    <span className="text-slate-600">{dh.checked}: <strong>{soldierSyncResults.checked}</strong></span>
                                     <span className={soldierSyncResults.updated > 0 ? "text-teal-700 font-semibold" : "text-green-600"}>
-                                        Updated: <strong>{soldierSyncResults.updated}</strong>
+                                        {dh.updated}: <strong>{soldierSyncResults.updated}</strong>
                                     </span>
                                 </div>
                                 {soldierSyncResults.updated === 0 ? (
-                                    <p className="text-green-600 font-semibold">✓ All equipment info is up to date!</p>
+                                    <p className="text-green-600 font-semibold">{dh.allUpToDate}</p>
                                 ) : (
                                     <div className="border rounded-lg p-3 bg-teal-50 space-y-2 max-h-48 overflow-y-auto">
                                         {soldierSyncResults.mismatches.map((m, i) => (
@@ -805,11 +892,11 @@ export default function DataHealth() {
                                         ))}
                                     </div>
                                 )}
-                                <Button onClick={runSoldierInfoSync} variant="outline" size="sm">Run Again</Button>
+                                <Button onClick={runSoldierInfoSync} variant="outline" size="sm">{dh.runAgain}</Button>
                             </div>
                         )}
                         {soldierSyncStatus === 'error' && (
-                            <p className="font-semibold text-red-600">An error occurred. Check the console for details.</p>
+                            <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -819,13 +906,13 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <AlertCircle className="w-5 h-5 text-purple-600"/>
-                           Last Week Weapon Assignment Sync
+                           {dh.lastWeekTitle}
                         </CardTitle>
-                        <CardDescription>Find soldiers assigned equipment in the last 7 days with weapons still in storage, and bulk issue those weapons.</CardDescription>
+                        <CardDescription>{dh.lastWeekDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {weekWeaponStatus === 'idle' && (
-                            <Button onClick={scanForLastWeekWeaponConflicts} variant="outline">Scan Last Week's Assignments</Button>
+                            <Button onClick={scanForLastWeekWeaponConflicts} variant="outline">{dh.scanLastWeek}</Button>
                         )}
                         {weekWeaponStatus === 'scanning' && (
                            <p className="text-slate-600">Scanning... Please wait.</p>
@@ -833,10 +920,10 @@ export default function DataHealth() {
                         {weekWeaponStatus === 'complete' && (
                              <div className="space-y-4">
                                  {weekWeaponConflicts.length === 0 ? (
-                                     <p className="text-green-600 font-semibold">✓ No conflicts found!</p>
+                                     <p className="text-green-600 font-semibold">{dh.noConflictsFound}</p>
                                  ) : (
                                      <div>
-                                        <p className="text-purple-600 font-semibold mb-4">{weekWeaponConflicts.length} weapon(s) assigned in last 7 days but still marked as storage:</p>
+                                        <p className="text-purple-600 font-semibold mb-4">{dh.weaponsLastWeekStorage(weekWeaponConflicts.length)}</p>
                                         <div className="space-y-2 mb-4 border rounded-lg p-3 bg-purple-50">
                                             {weekWeaponConflicts.map((conflict) => (
                                                 <div key={conflict.equipmentId} className="flex items-center gap-3 bg-white p-3 rounded border">
@@ -858,7 +945,7 @@ export default function DataHealth() {
                                                 disabled={assigningWeekWeapons}
                                                 className="bg-purple-600 hover:bg-purple-700 w-full"
                                             >
-                                                {assigningWeekWeapons ? 'Updating...' : `Assign Selected ${selectedWeekWeapons.size} Weapon(s)`}
+                                                {assigningWeekWeapons ? dh.updating : dh.assignSelected(selectedWeekWeapons.size)}
                                             </Button>
                                         )}
                                      </div>
@@ -866,7 +953,7 @@ export default function DataHealth() {
                             </div>
                         )}
                         {weekWeaponStatus === 'error' && (
-                           <p className="font-semibold text-red-600">An error occurred while scanning. Check the console for details.</p>
+                           <p className="font-semibold text-red-600">{dh.errorOccurred}</p>
                         )}
                     </CardContent>
                 </Card>
@@ -876,13 +963,13 @@ export default function DataHealth() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                            <AlertCircle className="w-5 h-5 text-blue-600"/>
-                           Today's Weapon Assignment Sync
+                           {dh.todayTitle}
                         </CardTitle>
-                        <CardDescription>Find soldiers assigned equipment today with weapons still in storage, and bulk issue those weapons.</CardDescription>
+                        <CardDescription>{dh.todayDesc}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         {todayWeaponStatus === 'idle' && (
-                            <Button onClick={scanForTodayWeaponConflicts} variant="outline">Scan Today's Assignments</Button>
+                            <Button onClick={scanForTodayWeaponConflicts} variant="outline">{dh.scanToday}</Button>
                         )}
                         {todayWeaponStatus === 'scanning' && (
                            <p className="text-slate-600">Scanning... Please wait.</p>
