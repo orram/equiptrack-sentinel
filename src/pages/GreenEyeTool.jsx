@@ -22,9 +22,10 @@ export default function GreenEyeTool() {
   const [inspections, setInspections] = useState([]);
   const [selectedPlatoon, setSelectedPlatoon] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("issued");
   const [squadFilter, setSquadFilter] = useState("all");
   const [wrongItemIds, setWrongItemIds] = useState(new Set());
+  const [showSummaryTable, setShowSummaryTable] = useState(false);
   const [summaryBySquad, setSummaryBySquad] = useState(false);
   const [approvalDialog, setApprovalDialog] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,21 +115,17 @@ export default function GreenEyeTool() {
     });
     setApprovalDialog(null);
     await loadData();
-    if (confirm("האם להוריד דוח עכשיו?")) downloadReport({ name, rank, idNumber, signature, status: approvalDialog, date: today });
+    if (confirm("האם לפתוח דוח עכשיו?")) openReportWindow({ name, rank, idNumber, signature, status: approvalDialog, date: today });
   };
 
-  const downloadReport = (approval = latestByPlatoon[selectedPlatoon]) => {
+  const openReportWindow = (approval = latestByPlatoon[selectedPlatoon]) => {
     const statusText = approval?.status === "approved" ? "מאושר" : "לא מאושר";
-    const reportHtml = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>דוח ירוק בעיניים</title><style>body{font-family:Arial;padding:24px;direction:rtl}table{width:100%;border-collapse:collapse;margin-top:16px}td,th{border:1px solid #999;padding:8px;text-align:right}.bad{background:#fee2e2}.header{display:flex;justify-content:space-between;align-items:center}.sig{max-width:240px;border:1px solid #ccc;margin-top:8px}</style></head><body><div class="header"><h1>דוח ירוק בעיניים - פלוגה ${selectedPlatoon}</h1><h2>${statusText}</h2></div><p>תאריך: ${approval?.date || approval?.inspection_date || new Date().toISOString().split("T")[0]}</p><p>מאשר: ${approval?.rank || approval?.approver_rank || ""} ${approval?.name || approval?.approver_name || ""} | מ.א: ${approval?.idNumber || approval?.approver_id || ""}</p>${approval?.signature || approval?.signature_data ? `<img class="sig" src="${approval.signature || approval.signature_data}" />` : ""}<h2>פריטים שגויים</h2><table><thead><tr><th>מ.ס</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>${wrongItems.map(item => `<tr class="bad"><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${item.assignment_status || ""}</td></tr>`).join("") || `<tr><td colspan="5">לא סומנו פריטים שגויים</td></tr>`}</tbody></table><h2>כל ציוד הפלוגה</h2><table><thead><tr><th>מ.ס</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>${platoonEquipment.map(item => `<tr><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${item.assignment_status || ""}</td></tr>`).join("")}</tbody></table></body></html>`;
-    const blob = new Blob([reportHtml], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `green_eye_${selectedPlatoon}_${new Date().toISOString().split("T")[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const reportHtml = `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>דוח ירוק בעיניים</title><style>body{font-family:Arial;padding:24px;direction:rtl}table{width:100%;border-collapse:collapse;margin-top:16px}td,th{border:1px solid #999;padding:8px;text-align:right}.bad{background:#fee2e2}.header{display:flex;justify-content:space-between;align-items:center}.sig{max-width:240px;border:1px solid #ccc;margin-top:8px}.actions{position:sticky;top:0;background:white;padding:12px 0;border-bottom:1px solid #ddd;margin-bottom:16px}@media print{.actions{display:none}}</style></head><body><div class="actions"><button onclick="window.print()" style="padding:10px 18px;cursor:pointer">הדפס / שמור PDF</button></div><div class="header"><h1>דוח ירוק בעיניים - פלוגה ${selectedPlatoon}</h1><h2>${statusText}</h2></div><p>תאריך: ${approval?.date || approval?.inspection_date || new Date().toISOString().split("T")[0]}</p><p>מאשר: ${approval?.rank || approval?.approver_rank || ""} ${approval?.name || approval?.approver_name || ""} | מ.א: ${approval?.idNumber || approval?.approver_id || ""}</p>${approval?.signature || approval?.signature_data ? `<img class="sig" src="${approval.signature || approval.signature_data}" />` : ""}<h2>פריטים שגויים</h2><table><thead><tr><th>מ.ס</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>${wrongItems.map(item => `<tr class="bad"><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${item.assignment_status || ""}</td></tr>`).join("") || `<tr><td colspan="5">לא סומנו פריטים שגויים</td></tr>`}</tbody></table><h2>כל ציוד הפלוגה</h2><table><thead><tr><th>מ.ס</th><th>ציוד</th><th>מחזיק</th><th>מחלקה</th><th>סטטוס</th></tr></thead><tbody>${platoonEquipment.map(item => `<tr><td>${item.serial_number || ""}</td><td>${item.object_name || ""}</td><td>${item.issued_soldier_name || ""}</td><td>${item.squad || ""}</td><td>${item.assignment_status || ""}</td></tr>`).join("")}</tbody></table></body></html>`;
+    const reportWindow = window.open("", "_blank");
+    if (!reportWindow) return;
+    reportWindow.document.open();
+    reportWindow.document.write(reportHtml);
+    reportWindow.document.close();
   };
 
   return (
@@ -151,8 +148,8 @@ export default function GreenEyeTool() {
             <Button variant="destructive" onClick={() => setApprovalDialog("not_approved")} disabled={!selectedPlatoon}>
               <XCircle className="w-4 h-4 ml-2" /> לא מאושר
             </Button>
-            <Button variant="outline" onClick={() => downloadReport()} disabled={!selectedPlatoon}>
-              <Download className="w-4 h-4 ml-2" /> צור דוח
+            <Button variant="outline" onClick={() => openReportWindow()} disabled={!selectedPlatoon}>
+              <Download className="w-4 h-4 ml-2" /> פתח דוח
             </Button>
           </div>
         </div>
@@ -190,15 +187,23 @@ export default function GreenEyeTool() {
 
             <div className="flex items-center justify-between bg-white border rounded-lg p-3">
               <div className="text-sm text-slate-600">מוצגים {filteredEquipment.length} מתוך {platoonEquipment.length} פריטים | שגויים: {wrongItemIds.size}</div>
-              <div className="flex items-center gap-2">
-                <Label>סיכום לפי מחלקה</Label>
-                <Switch checked={summaryBySquad} onCheckedChange={setSummaryBySquad} />
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label>הצג טבלת סיכום</Label>
+                  <Switch checked={showSummaryTable} onCheckedChange={setShowSummaryTable} />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label>סיכום לפי מחלקה</Label>
+                  <Switch checked={summaryBySquad} onCheckedChange={setSummaryBySquad} disabled={!showSummaryTable} />
+                </div>
               </div>
             </div>
 
             {isLoading ? <p className="text-center text-slate-500 py-8">טוען...</p> : (
               <>
-                <GreenSummaryTable equipment={platoonEquipment} wrongItemIds={wrongItemIds} viewMode={summaryBySquad ? "squad" : "total"} />
+                {showSummaryTable && (
+                  <GreenSummaryTable equipment={platoonEquipment} wrongItemIds={wrongItemIds} viewMode={summaryBySquad ? "squad" : "total"} />
+                )}
                 <EquipmentEvaluationTable equipment={filteredEquipment} wrongItemIds={wrongItemIds} onToggleWrong={toggleWrongItem} />
               </>
             )}
