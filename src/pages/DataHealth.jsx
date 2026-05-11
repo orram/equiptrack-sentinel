@@ -42,6 +42,63 @@ export default function DataHealth() {
     const [soldierSyncStatus, setSoldierSyncStatus] = useState('idle'); // idle, scanning, complete, error
     const [soldierSyncResults, setSoldierSyncResults] = useState({ checked: 0, updated: 0, mismatches: [] });
 
+    // Unknown Holder ID detection
+    const [unknownHolderStatus, setUnknownHolderStatus] = useState('idle'); // idle, scanning, complete, error
+    const [unknownHolderItems, setUnknownHolderItems] = useState([]); // [{equipment, suggestions}]
+    const [applyingFix, setApplyingFix] = useState(null); // equipmentId being fixed
+
+    const scanForUnknownHolders = async () => {
+        setUnknownHolderStatus('scanning');
+        setUnknownHolderItems([]);
+        try {
+            const [allEquipment, allSoldiers] = await Promise.all([
+                Equipment.filter({ assignment_status: 'issued' }),
+                Soldier.list(),
+            ]);
+            const soldierIdSet = new Set(allSoldiers.map(s => s.soldier_id));
+            const results = [];
+
+            for (const item of allEquipment) {
+                if (!item.issued_soldier_id) continue;
+                if (soldierIdSet.has(item.issued_soldier_id)) continue;
+
+                // ID not found — search by name
+                const name = (item.issued_soldier_name || '').toLowerCase().trim();
+                const suggestions = name
+                    ? allSoldiers.filter(s =>
+                        s.full_name?.toLowerCase().includes(name) ||
+                        name.includes(s.full_name?.toLowerCase())
+                      )
+                    : [];
+
+                results.push({ equipment: item, suggestions });
+            }
+
+            setUnknownHolderItems(results);
+            setUnknownHolderStatus('complete');
+        } catch (error) {
+            console.error("Error scanning for unknown holders:", error);
+            setUnknownHolderStatus('error');
+        }
+    };
+
+    const applyHolderFix = async (equipment, soldier) => {
+        setApplyingFix(equipment.id);
+        try {
+            await Equipment.update(equipment.id, {
+                issued_soldier_id: soldier.soldier_id,
+                issued_soldier_name: soldier.full_name,
+                platoon: soldier.platoon,
+                squad: soldier.squad,
+            });
+            setUnknownHolderItems(prev => prev.filter(i => i.equipment.id !== equipment.id));
+        } catch (error) {
+            console.error("Error fixing holder:", error);
+            alert("Failed to update equipment. Please try again.");
+        }
+        setApplyingFix(null);
+    };
+
     // Duplicate soldier ID detection & merge
     const [dupSoldierStatus, setDupSoldierStatus] = useState('idle'); // idle, scanning, complete, merging
     const [dupSoldierGroups, setDupSoldierGroups] = useState([]); // [{soldier_id, soldiers: [...]}]
@@ -609,6 +666,76 @@ export default function DataHealth() {
                         <p className="text-slate-600 mt-1">Run maintenance and migration tasks.</p>
                     </div>
                 </div>
+
+                {/* Unknown Holder ID Card */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <AlertCircle className="w-5 h-5 text-rose-600"/>
+                            Unknown Holder ID Check
+                        </CardTitle>
+                        <CardDescription>Find issued equipment whose holder ID doesn't match any soldier record. Suggests matches by name.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {(unknownHolderStatus === 'idle' || unknownHolderStatus === 'error') && (
+                            <div className="space-y-2">
+                                <Button onClick={scanForUnknownHolders} variant="outline">Scan for Unknown Holders</Button>
+                                {unknownHolderStatus === 'error' && <p className="text-red-600 text-sm font-semibold">An error occurred. Check the console.</p>}
+                            </div>
+                        )}
+                        {unknownHolderStatus === 'scanning' && <p className="text-slate-600">Scanning... Please wait.</p>}
+                        {unknownHolderStatus === 'complete' && (
+                            <div className="space-y-4">
+                                {unknownHolderItems.length === 0 ? (
+                                    <p className="text-green-600 font-semibold">✓ All holder IDs are valid!</p>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <p className="text-rose-600 font-semibold">{unknownHolderItems.length} item(s) have an unrecognized holder ID:</p>
+                                        {unknownHolderItems.map(({ equipment, suggestions }) => (
+                                            <div key={equipment.id} className="border rounded-lg p-4 bg-rose-50">
+                                                <div className="mb-2">
+                                                    <p className="font-semibold text-slate-900">
+                                                        <code className="bg-white px-1 rounded border text-sm">{equipment.serial_number}</code> — {equipment.object_name}
+                                                    </p>
+                                                    <p className="text-sm text-rose-700 mt-1">
+                                                        Holder ID <strong>{equipment.issued_soldier_id}</strong> not found
+                                                        {equipment.issued_soldier_name && <> · Name on record: <strong>{equipment.issued_soldier_name}</strong></>}
+                                                    </p>
+                                                </div>
+                                                {suggestions.length > 0 ? (
+                                                    <div>
+                                                        <p className="text-xs text-slate-600 mb-2 font-medium">Possible matches by name:</p>
+                                                        <div className="space-y-2">
+                                                            {suggestions.map(s => (
+                                                                <div key={s.id} className="flex items-center justify-between bg-white p-2 rounded border">
+                                                                    <div>
+                                                                        <p className="text-sm font-medium">{s.full_name}</p>
+                                                                        <p className="text-xs text-slate-500">ID: {s.soldier_id} · {s.rank} · {s.platoon} / {s.squad}</p>
+                                                                    </div>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        disabled={applyingFix === equipment.id}
+                                                                        className="bg-rose-600 hover:bg-rose-700"
+                                                                        onClick={() => applyHolderFix(equipment, s)}
+                                                                    >
+                                                                        {applyingFix === equipment.id ? 'Updating...' : 'Use This Soldier'}
+                                                                    </Button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-slate-500 italic">No name matches found. Update manually in the Equipment page.</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                <Button onClick={scanForUnknownHolders} variant="outline" size="sm">Rescan</Button>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Soldier Info Sync Card */}
                 <Card className="mb-6">
