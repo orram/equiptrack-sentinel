@@ -34,8 +34,10 @@ export default function GreenEyeTool() {
   }, [equipment]);
 
   const latestByPlatoon = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
     const latest = {};
     inspections.forEach(record => {
+      if (record.inspection_date !== today) return;
       if (!latest[record.platoon]) latest[record.platoon] = record;
     });
     return latest;
