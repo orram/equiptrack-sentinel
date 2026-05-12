@@ -18,6 +18,12 @@ const conditionColors = {
   poor: "bg-red-100 text-red-800"
 };
 
+const formatConfirmedDate = (dateString) => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  return `${day}/${month}/${year.slice(-2)}`;
+};
+
 export default function EquipmentList({ equipment, isLoading, onIssueEquipment, onViewDetails, onDeleteEquipment, onConfirmLocation, t }) {
   return (
     <Card>
@@ -88,22 +94,31 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className={`${statusColors[item.assignment_status]} text-xs`}
-                  >
-                    {item.assignment_status}
-                  </Badge>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className={`${statusColors[item.assignment_status]} text-xs`}
+                      >
+                        {item.assignment_status}
+                      </Badge>
 
-                  {item.condition && (
-                    <Badge
-                      variant="outline"
-                      className={`${conditionColors[item.condition]} text-xs`}
-                    >
-                      {item.condition}
-                    </Badge>
-                  )}
+                      {item.condition && (
+                        <Badge
+                          variant="outline"
+                          className={`${conditionColors[item.condition]} text-xs`}
+                        >
+                          {item.condition}
+                        </Badge>
+                      )}
+                    </div>
+                    {item.location_confirmed_date && (
+                      <p className="mt-1 text-xs text-green-700 font-medium">
+                        Confirmed at {formatConfirmedDate(item.location_confirmed_date)}
+                      </p>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" onClick={() => onViewDetails(item)}>
