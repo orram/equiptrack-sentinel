@@ -39,6 +39,7 @@ export default function ReturnTool() {
   });
   const [supplantingCheckOpen, setSupplantingCheckOpen] = useState(false);
   const [pendingReturnItems, setPendingReturnItems] = useState([]);
+  const [returnQuantities, setReturnQuantities] = useState({});
 
   const loadData = useCallback(async (retryCount = 0) => {
     const MAX_RETRIES = 2;
@@ -109,18 +110,39 @@ export default function ReturnTool() {
 
 
   const handleSelectItem = (assignmentId) => {
-    setSelectedItems(prev =>
-      prev.includes(assignmentId)
-        ? prev.filter(id => id !== assignmentId)
-        : [...prev, assignmentId]
-    );
+    const issuedItem = allIssuedItems.find(item => item.assignment.id === assignmentId);
+
+    setSelectedItems(prev => {
+      if (prev.includes(assignmentId)) {
+        setReturnQuantities(current => {
+          const next = { ...current };
+          delete next[assignmentId];
+          return next;
+        });
+        return prev.filter(id => id !== assignmentId);
+      }
+
+      if (issuedItem?.type === 'inventory') {
+        setReturnQuantities(current => ({
+          ...current,
+          [assignmentId]: issuedItem.assignment.quantity || 1
+        }));
+      }
+      return [...prev, assignmentId];
+    });
   };
 
   const handleSelectAll = () => {
     if (selectedItems.length === allIssuedItems.length) {
       setSelectedItems([]);
+      setReturnQuantities({});
     } else {
       setSelectedItems(allIssuedItems.map(item => item.assignment.id));
+      setReturnQuantities(Object.fromEntries(
+        allIssuedItems
+          .filter(item => item.type === 'inventory')
+          .map(item => [item.assignment.id, item.assignment.quantity || 1])
+      ));
     }
   };
 
@@ -141,7 +163,14 @@ export default function ReturnTool() {
     }
 
     // Snapshot the full item data at the time of confirmation (before filters can change)
-    const itemsSnapshot = allIssuedItems.filter(item => selectedItems.includes(item.assignment.id));
+    const itemsSnapshot = allIssuedItems
+      .filter(item => selectedItems.includes(item.assignment.id))
+      .map(item => ({
+        ...item,
+        return_quantity: item.type === 'inventory'
+          ? Math.max(1, Math.min(Number(returnQuantities[item.assignment.id]) || 1, item.assignment.quantity || 1))
+          : 1
+      }));
 
     // Check if any items have supplanting items
     const itemsWithSupplanting = itemsSnapshot.filter(item =>
@@ -171,13 +200,23 @@ export default function ReturnTool() {
       for (const issuedItem of items) {
         const { assignment, itemDetails, soldier } = issuedItem;
 
-        // Update the main assignment
-        await Assignment.update(assignment.id, {
-          status: 'returned',
-          return_date: new Date().toISOString().split('T')[0],
-          condition_on_return: itemDetails.condition || 'good',
-          notes: 'Returned via Return Tool - CLEARED (זוכה)',
-        });
+        const returnQuantity = issuedItem.return_quantity || assignment.quantity || 1;
+        const assignedQuantity = assignment.quantity || 1;
+        const isPartialInventoryReturn = assignment.assignment_type === 'inventory' && returnQuantity < assignedQuantity;
+
+        if (isPartialInventoryReturn) {
+          await Assignment.update(assignment.id, {
+            quantity: assignedQuantity - returnQuantity,
+            notes: `Partial return via Return Tool - returned ${returnQuantity}, remaining ${assignedQuantity - returnQuantity}`,
+          });
+        } else {
+          await Assignment.update(assignment.id, {
+            status: 'returned',
+            return_date: new Date().toISOString().split('T')[0],
+            condition_on_return: itemDetails.condition || 'good',
+            notes: 'Returned via Return Tool - CLEARED (זוכה)',
+          });
+        }
 
         // Handle supplanting items return
         if (assignment.signature_data?.supplanting_items && assignment.signature_data.supplanting_items.length > 0) {
@@ -197,7 +236,7 @@ export default function ReturnTool() {
         if (assignment.assignment_type === 'inventory') {
           const invItem = inventoryItems.find(i => i.object_name === assignment.equipment_id);
           if (invItem) {
-            addInventoryDelta(invItem, assignment.quantity || 1);
+            addInventoryDelta(invItem, returnQuantity);
           }
         } else {
           const eqItem = equipment.find(e => e.serial_number === assignment.equipment_id);
@@ -229,6 +268,7 @@ export default function ReturnTool() {
 
       alert(t.successfullyReturnedNItems(items.length));
       setSelectedItems([]);
+      setReturnQuantities({});
       setPendingReturnItems([]);
       loadData();
       
@@ -350,7 +390,10 @@ export default function ReturnTool() {
                 {selectedItems.length > 0 && (
                   <Button
                     variant="outline"
-                    onClick={() => setSelectedItems([])}
+                    onClick={() => {
+                      setSelectedItems([]);
+                      setReturnQuantities({});
+                    }}
                     className="w-full md:w-auto"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
@@ -411,6 +454,22 @@ export default function ReturnTool() {
                       <h4 className="font-medium text-sm md:text-base truncate">{item.itemDetails.object_name}</h4>
                       {item.type === 'inventory' && (
                          <Badge variant="secondary">{item.assignment.quantity}x</Badge>
+                      )}
+                      {item.type === 'inventory' && selectedItems.includes(item.assignment.id) && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-500">Return</span>
+                          <Input
+                            type="number"
+                            min="1"
+                            max={item.assignment.quantity || 1}
+                            value={returnQuantities[item.assignment.id] || item.assignment.quantity || 1}
+                            onChange={(e) => setReturnQuantities(prev => ({
+                              ...prev,
+                              [item.assignment.id]: Math.max(1, Math.min(Number(e.target.value) || 1, item.assignment.quantity || 1))
+                            }))}
+                            className="w-20 h-8"
+                          />
+                        </div>
                       )}
                     </div>
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-xs md:text-sm text-slate-500">
