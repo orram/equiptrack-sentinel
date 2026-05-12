@@ -52,21 +52,21 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
             {equipment.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-4 p-3 border rounded-lg"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border rounded-lg"
               >
-                <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                <div className="hidden sm:flex w-12 h-12 bg-slate-100 rounded-lg items-center justify-center flex-shrink-0">
                   <Package className="w-6 h-6 text-slate-600" />
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <code className="text-sm bg-slate-100 px-2 py-1 rounded font-mono font-semibold">
+                <div className="w-full sm:flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <code className="text-xs sm:text-sm bg-slate-100 px-2 py-1 rounded font-mono font-semibold">
                       {item.serial_number}
                     </code>
-                    <h3 className="font-semibold">{item.object_name}</h3>
+                    <h3 className="font-semibold text-sm sm:text-base truncate">{item.object_name}</h3>
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-slate-500">
                     {item.platoon && (
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
@@ -94,8 +94,8 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                  <div className="w-full sm:w-auto">
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
@@ -120,21 +120,23 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     <Button variant="ghost" size="icon" onClick={() => onViewDetails(item)}>
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
+                      className="flex-1 sm:flex-none"
                       onClick={() => onDeleteEquipment(item)}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       {t.delete}
                     </Button>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
                       <Button
                         size="sm"
+                        className="flex-1 sm:flex-none"
                         onClick={() => onIssueEquipment(item)}
                         disabled={item.assignment_status !== 'storage'}
                       >
@@ -144,7 +146,7 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-green-200 text-green-700 hover:bg-green-50"
+                        className="flex-1 sm:flex-none border-green-200 text-green-700 hover:bg-green-50"
                         onClick={() => onConfirmLocation(item)}
                       >
                         <CheckCircle className="w-4 h-4 mr-2" />
