@@ -1,5 +1,6 @@
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Filter } from "lucide-react";
 
 export default function EquipmentFilters({ filters, onFilterChange, equipment, t }) {
@@ -10,7 +11,7 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
   const hasNoPlatoonItems = equipment.some(e => !e.platoon);
   
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap gap-3">
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-slate-400" />
         <Select 
@@ -77,6 +78,14 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
           <SelectItem value="poor">Poor</SelectItem>
         </SelectContent>
       </Select>
+
+      <Input
+        type="date"
+        value={filters.locationConfirmedDate || ""}
+        onChange={(e) => onFilterChange({ ...filters, locationConfirmedDate: e.target.value })}
+        className="w-44"
+        title="Location confirmed date"
+      />
     </div>
   );
 }
