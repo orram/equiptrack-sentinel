@@ -212,6 +212,13 @@ export default function EquipmentPage() {
     loadData();
   };
 
+  const handleConfirmLocation = async (item) => {
+    await Equipment.update(item.id, {
+      location_confirmed_date: new Date().toISOString().split('T')[0]
+    });
+    loadData();
+  };
+
   const handleAddEquipment = () => {
     setShowAddModal(true);
   };
@@ -302,6 +309,7 @@ export default function EquipmentPage() {
               onIssueEquipment={handleIssueEquipment}
               onViewDetails={setSelectedEquipment}
               onDeleteEquipment={handleDeleteEquipment}
+              onConfirmLocation={handleConfirmLocation}
               t={t}
             />
           </div>

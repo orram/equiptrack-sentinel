@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, User, MapPin, MoreVertical, Users, Check, Trash2 } from "lucide-react";
+import { Package, User, MapPin, MoreVertical, Users, Check, Trash2, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusColors = {
@@ -18,7 +18,7 @@ const conditionColors = {
   poor: "bg-red-100 text-red-800"
 };
 
-export default function EquipmentList({ equipment, isLoading, onIssueEquipment, onViewDetails, onDeleteEquipment, t }) {
+export default function EquipmentList({ equipment, isLoading, onIssueEquipment, onViewDetails, onDeleteEquipment, onConfirmLocation, t }) {
   return (
     <Card>
       <CardHeader>
@@ -117,14 +117,25 @@ export default function EquipmentList({ equipment, isLoading, onIssueEquipment, 
                       <Trash2 className="w-4 h-4 mr-2" />
                       {t.delete}
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => onIssueEquipment(item)}
-                      disabled={item.assignment_status !== 'storage'}
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      {t.issue}
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => onIssueEquipment(item)}
+                        disabled={item.assignment_status !== 'storage'}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        {t.issue}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-green-200 text-green-700 hover:bg-green-50"
+                        onClick={() => onConfirmLocation(item)}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Location confirmed
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
