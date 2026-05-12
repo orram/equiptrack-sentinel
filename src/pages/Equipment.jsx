@@ -285,8 +285,8 @@ export default function EquipmentPage() {
         {/* Search and Filters */}
         <Card className="mb-6">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col xl:flex-row gap-4">
+              <div className="relative w-full xl:flex-1 xl:min-w-80">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                 <Input
                   placeholder={t.searchEquipmentByNameSerialHolder}

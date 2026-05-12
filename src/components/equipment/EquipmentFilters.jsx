@@ -11,7 +11,7 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
   const hasNoPlatoonItems = equipment.some(e => !e.platoon);
   
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-3 w-full xl:w-auto min-w-0">
       <div className="flex items-center gap-2">
         <Filter className="w-4 h-4 text-slate-400" />
         <Select 
@@ -79,24 +79,26 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
         </SelectContent>
       </Select>
 
-      <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-md border border-slate-200 px-3 py-2 w-full lg:w-auto min-w-0">
         <span className="text-sm font-medium text-slate-600 whitespace-nowrap">Location confirmed date:</span>
-        <span className="text-xs text-slate-500">From</span>
-        <Input
-          type="date"
-          value={filters.locationConfirmedFrom || ""}
-          onChange={(e) => onFilterChange({ ...filters, locationConfirmedFrom: e.target.value })}
-          className="w-36 h-8"
-          title="Location confirmed from date"
-        />
-        <span className="text-xs text-slate-500">To</span>
-        <Input
-          type="date"
-          value={filters.locationConfirmedTo || ""}
-          onChange={(e) => onFilterChange({ ...filters, locationConfirmedTo: e.target.value })}
-          className="w-36 h-8"
-          title="Location confirmed to date"
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+          <span className="text-xs text-slate-500">From</span>
+          <Input
+            type="date"
+            value={filters.locationConfirmedFrom || ""}
+            onChange={(e) => onFilterChange({ ...filters, locationConfirmedFrom: e.target.value })}
+            className="w-full sm:w-36 h-8"
+            title="Location confirmed from date"
+          />
+          <span className="text-xs text-slate-500">To</span>
+          <Input
+            type="date"
+            value={filters.locationConfirmedTo || ""}
+            onChange={(e) => onFilterChange({ ...filters, locationConfirmedTo: e.target.value })}
+            className="w-full sm:w-36 h-8"
+            title="Location confirmed to date"
+          />
+        </div>
       </div>
     </div>
   );
