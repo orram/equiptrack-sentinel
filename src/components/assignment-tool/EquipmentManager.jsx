@@ -36,6 +36,7 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   const [allSoldiers, setAllSoldiers] = useState([]);
   const [supplantingItems, setSupplantingItems] = useState([]);
   const [selectedSupplantingItems, setSelectedSupplantingItems] = useState({});
+  const [inventoryQuantities, setInventoryQuantities] = useState({});
 
   useEffect(() => {
     loadAllAssignments();
@@ -135,12 +136,24 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   }, [equipment, allIssuedItems, suggestionsInStorage]);
 
   const availableInventory = useMemo(() => {
-    return inventoryItems.filter(item => {
-      if (!item?.object_name) return false;
-      const hasAvailableQuantity = (item.available_quantity || 0) > 0;
-      return hasAvailableQuantity;
-    });
-  }, [inventoryItems]);
+    const pendingInventoryQuantities = pendingAssignments
+      .filter(item => item?.assignment_type === 'inventory')
+      .reduce((totals, item) => {
+        totals[item.object_name] = (totals[item.object_name] || 0) + (item.quantity || 1);
+        return totals;
+      }, {});
+
+    return inventoryItems
+      .map(item => ({
+        ...item,
+        available_quantity: Math.max(0, (item.available_quantity || 0) - (pendingInventoryQuantities[item.object_name] || 0))
+      }))
+      .filter(item => {
+        if (!item?.object_name) return false;
+        const hasAvailableQuantity = (item.available_quantity || 0) > 0;
+        return hasAvailableQuantity;
+      });
+  }, [inventoryItems, pendingAssignments]);
 
   const filteredPreviouslyUsedEquipment = useMemo(() => {
     return suggestionsInStorage.filter(item => {
@@ -311,20 +324,29 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
   const handleAssignInventoryItem = (inventoryItem, quantity = 1) => {
     if (!inventoryItem?.object_name || !soldier?.soldier_id) return;
 
-    if (pendingAssignments.some(p => p.assignment_type === 'inventory' && p.object_name === inventoryItem.object_name)) {
-      alert(t.inventoryItemAlreadyPending || "This inventory item is already pending assignment.");
-      return;
-    }
+    const quantityToAdd = Math.max(1, Math.min(Number(quantity) || 1, inventoryItem.available_quantity || 0));
+    if (quantityToAdd <= 0) return;
 
-    setPendingAssignments(prev => [
-      ...prev,
-      {
-        ...inventoryItem,
-        assignment_type: 'inventory',
-        quantity: quantity,
-        serial_number: `INV-PENDING-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+    setPendingAssignments(prev => {
+      const existingPending = prev.find(p => p.assignment_type === 'inventory' && p.object_name === inventoryItem.object_name);
+      if (existingPending) {
+        return prev.map(item =>
+          item.serial_number === existingPending.serial_number
+            ? { ...item, quantity: (item.quantity || 0) + quantityToAdd }
+            : item
+        );
       }
-    ]);
+
+      return [
+        ...prev,
+        {
+          ...inventoryItem,
+          assignment_type: 'inventory',
+          quantity: quantityToAdd,
+          serial_number: `INV-PENDING-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`
+        }
+      ];
+    });
   };
 
   const removePendingAssignment = (idToRemove) => {
@@ -787,13 +809,26 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
                             </p>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => handleAssignInventoryItem(item, 1)}
-                          disabled={isProcessing || (item?.available_quantity || 0) <= 0}
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          {t.issue || "Issue"}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min="1"
+                            max={item?.available_quantity || 1}
+                            value={inventoryQuantities[item.object_name] || 1}
+                            onChange={(e) => setInventoryQuantities(prev => ({
+                              ...prev,
+                              [item.object_name]: Math.max(1, Math.min(Number(e.target.value) || 1, item?.available_quantity || 1))
+                            }))}
+                            className="w-20"
+                          />
+                          <Button
+                            onClick={() => handleAssignInventoryItem(item, inventoryQuantities[item.object_name] || 1)}
+                            disabled={isProcessing || (item?.available_quantity || 0) <= 0}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            {t.issue || "Issue"}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
