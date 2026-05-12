@@ -8,6 +8,7 @@ import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/lib/language";
 import EquipmentSummaryTable from "../components/management-view/EquipmentSummaryTable";
 import ControlTableFilters from "../components/management-view/ControlTableFilters";
+import ControlTableAddEquipment from "../components/management-view/ControlTableAddEquipment";
 
 
 export default function EquipmentControlTable() {
@@ -316,6 +317,13 @@ export default function EquipmentControlTable() {
                     lang={language}
                 />
             </div>
+            <ControlTableAddEquipment
+              equipment={equipment}
+              controlItems={equipmentControlItems}
+              controlEntity={EquipmentControlItem}
+              onItemsChange={setEquipmentControlItems}
+              language={language}
+            />
             <Button onClick={handleDownloadCSV} variant="outline" disabled={isLoading || !processedData || processedData.isEmpty}>
                 <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {pt.downloadCsv}
