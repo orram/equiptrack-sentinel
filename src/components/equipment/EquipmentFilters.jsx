@@ -79,13 +79,25 @@ export default function EquipmentFilters({ filters, onFilterChange, equipment, t
         </SelectContent>
       </Select>
 
-      <Input
-        type="date"
-        value={filters.locationConfirmedDate || ""}
-        onChange={(e) => onFilterChange({ ...filters, locationConfirmedDate: e.target.value })}
-        className="w-44"
-        title="Location confirmed date"
-      />
+      <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2">
+        <span className="text-sm font-medium text-slate-600 whitespace-nowrap">Location confirmed date:</span>
+        <span className="text-xs text-slate-500">From</span>
+        <Input
+          type="date"
+          value={filters.locationConfirmedFrom || ""}
+          onChange={(e) => onFilterChange({ ...filters, locationConfirmedFrom: e.target.value })}
+          className="w-36 h-8"
+          title="Location confirmed from date"
+        />
+        <span className="text-xs text-slate-500">To</span>
+        <Input
+          type="date"
+          value={filters.locationConfirmedTo || ""}
+          onChange={(e) => onFilterChange({ ...filters, locationConfirmedTo: e.target.value })}
+          className="w-36 h-8"
+          title="Location confirmed to date"
+        />
+      </div>
     </div>
   );
 }

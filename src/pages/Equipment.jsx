@@ -45,7 +45,8 @@ export default function EquipmentPage() {
     platoon: "all",
     squad: "all",
     condition: "all",
-    locationConfirmedDate: ""
+    locationConfirmedFrom: "",
+    locationConfirmedTo: ""
   });
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [showIssueModal, setShowIssueModal] = useState(false);
@@ -130,9 +131,11 @@ export default function EquipmentPage() {
     
     const matchesSquad = filters.squad === "all" || item.squad === filters.squad;
     const matchesCondition = filters.condition === "all" || item.condition === filters.condition;
-    const matchesLocationConfirmedDate = !filters.locationConfirmedDate || item.location_confirmed_date === filters.locationConfirmedDate;
+    const confirmedDate = item.location_confirmed_date || "";
+    const matchesLocationConfirmedFrom = !filters.locationConfirmedFrom || (confirmedDate && confirmedDate >= filters.locationConfirmedFrom);
+    const matchesLocationConfirmedTo = !filters.locationConfirmedTo || (confirmedDate && confirmedDate <= filters.locationConfirmedTo);
 
-    return matchesSearch && matchesStatus && matchesPlatoon && matchesSquad && matchesCondition && matchesLocationConfirmedDate;
+    return matchesSearch && matchesStatus && matchesPlatoon && matchesSquad && matchesCondition && matchesLocationConfirmedFrom && matchesLocationConfirmedTo;
   });
 
   const filteredDeletedEquipment = oldEquipment.filter(item => {
