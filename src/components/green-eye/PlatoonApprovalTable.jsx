@@ -15,6 +15,8 @@ export default function PlatoonApprovalTable({ platoons, latestByPlatoon }) {
             <TableRow>
               <TableHead className="text-right">פלוגה</TableHead>
               <TableHead className="text-center">סטטוס</TableHead>
+              <TableHead className="text-center">מאשר</TableHead>
+              <TableHead className="text-center">מספר אישי</TableHead>
               <TableHead className="text-center">תאריך</TableHead>
             </TableRow>
           </TableHeader>
@@ -34,6 +36,8 @@ export default function PlatoonApprovalTable({ platoons, latestByPlatoon }) {
                       <Badge variant="outline">לא נבדק</Badge>
                     )}
                   </TableCell>
+                  <TableCell className="text-center">{record?.approver_name || "-"}</TableCell>
+                  <TableCell className="text-center">{record?.approver_id || "-"}</TableCell>
                   <TableCell className="text-center">{record?.inspection_date || "-"}</TableCell>
                 </TableRow>
               );
