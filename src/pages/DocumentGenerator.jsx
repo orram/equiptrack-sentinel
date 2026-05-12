@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { Soldier, Assignment, Equipment } from "@/entities/all";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ export default function DocumentGenerator() {
   const [allSoldiers, setAllSoldiers] = useState([]);
   const [allEquipment, setAllEquipment] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filters, setFilters] = useState({ platoon: 'all', date: undefined, searchTerm: '', status: 'all' });
+  const [filters, setFilters] = useState({ platoon: 'all', date: undefined, searchTerm: '', status: 'all', sortOrder: 'desc' });
   const [selectedGroupKeys, setSelectedGroupKeys] = useState([]);
 
   useEffect(() => {
@@ -81,6 +80,12 @@ export default function DocumentGenerator() {
     if (filters.platoon !== 'all') {
       filtered = filtered.filter(a => soldierPlatoons[a.soldier_id] === filters.platoon);
     }
+
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.assignment_date || 0).getTime();
+      const dateB = new Date(b.assignment_date || 0).getTime();
+      return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
     // Group by soldier, then by assignment details
     return groupBy(filtered, 'soldier_id');
@@ -179,7 +184,9 @@ export default function DocumentGenerator() {
         return a.squad.localeCompare(b.squad, undefined, { numeric: true });
       }
       // Finally by date
-      return a.date.getTime() - b.date.getTime();
+      return filters.sortOrder === 'asc'
+        ? a.date.getTime() - b.date.getTime()
+        : b.date.getTime() - a.date.getTime();
     });
 
     // Combine HTML in sorted order
@@ -286,6 +293,11 @@ export default function DocumentGenerator() {
               if (!soldier) return null;
               
               const soldierAssignmentGroups = groupBy(sortedAssignmentGroups[soldierId], a => `${new Date(a.assignment_date).toISOString().split('T')[0]}-${a.status}`);
+              const sortedSoldierAssignmentEntries = Object.entries(soldierAssignmentGroups).sort(([keyA], [keyB]) => {
+                const dateA = new Date(keyA.split('-').slice(0, 3).join('-')).getTime();
+                const dateB = new Date(keyB.split('-').slice(0, 3).join('-')).getTime();
+                return filters.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+              });
 
               return (
                 <div key={soldierId}>
@@ -296,7 +308,7 @@ export default function DocumentGenerator() {
                     </span>
                   </h2>
                   <div className="space-y-4">
-                    {Object.entries(soldierAssignmentGroups).map(([key, group]) => {
+                    {sortedSoldierAssignmentEntries.map(([key, group]) => {
                        const groupKey = `${soldierId}||${key}`;
                        return (
                           <AssignmentGroupCard 

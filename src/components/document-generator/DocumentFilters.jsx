@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { Calendar as CalendarIcon, Search } from "lucide-react";
+import { Calendar as CalendarIcon, Search, ArrowDownUp } from "lucide-react";
 import { format } from 'date-fns';
 
 export default function DocumentFilters({ platoons, onFilterChange, currentFilters }) {
@@ -53,6 +53,21 @@ export default function DocumentFilters({ platoons, onFilterChange, currentFilte
                         <SelectItem value="all">All Statuses</SelectItem>
                         <SelectItem value="active">Not Cleared</SelectItem>
                         <SelectItem value="returned">Cleared</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {/* Sort Order */}
+            <div className="flex-1 min-w-[150px]">
+                <label className="text-sm font-medium text-slate-700 mb-1 block">Order</label>
+                <Select value={currentFilters.sortOrder || 'desc'} onValueChange={(value) => handleChange({ sortOrder: value })}>
+                    <SelectTrigger>
+                        <ArrowDownUp className="mr-2 h-4 w-4" />
+                        <SelectValue placeholder="Choose order" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="desc">Newest first</SelectItem>
+                        <SelectItem value="asc">Oldest first</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
