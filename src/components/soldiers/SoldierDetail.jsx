@@ -133,34 +133,45 @@ export default function SoldierDetail({ soldier, assignments = [], equipment = [
 
             {showHistory && (
               <div className="mt-3 space-y-2 max-h-64 overflow-y-auto pr-1">
-                {historyAssignments.map((a, idx) => (
-                  <div key={a.id || idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-medium text-slate-800 truncate">{a.equipment_id}</span>
-                      <Badge
-                        variant="outline"
-                        className={
-                          a.status === 'returned'
-                            ? 'bg-slate-100 text-slate-600 border-slate-200 whitespace-nowrap'
-                            : 'bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap'
-                        }
-                      >
-                        {a.status === 'returned' ? (t?.returned || 'Returned') : (t?.transferred || 'Transferred')}
-                      </Badge>
-                    </div>
-                    <div className="text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
-                      {a.assignment_date && (
-                        <span>{t?.assigned || 'Assigned'}: {a.assignment_date}</span>
+                {historyAssignments.map((a, idx) => {
+                  const isInventory = a.assignment_type === 'inventory';
+                  const equipmentMatch = isInventory
+                    ? inventoryItems.find(item => item.object_name === a.equipment_id)
+                    : equipment.find(item => item.serial_number === a.equipment_id);
+                  const equipmentName = equipmentMatch?.object_name || a.equipment_id;
+
+                  return (
+                    <div key={a.id || idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-xs">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="min-w-0">
+                          <span className="font-medium text-slate-800 truncate block">{equipmentName}</span>
+                          <span className="text-slate-400 truncate block">{isInventory ? `${a.quantity || 1}x` : a.equipment_id}</span>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={
+                            a.status === 'returned'
+                              ? 'bg-slate-100 text-slate-600 border-slate-200 whitespace-nowrap'
+                              : 'bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap'
+                          }
+                        >
+                          {a.status === 'returned' ? (t?.returned || 'Returned') : (t?.transferred || 'Transferred')}
+                        </Badge>
+                      </div>
+                      <div className="text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                        {a.assignment_date && (
+                          <span>{t?.assigned || 'Assigned'}: {a.assignment_date}</span>
+                        )}
+                        {a.return_date && (
+                          <span>{t?.returned || 'Returned'}: {a.return_date}</span>
+                        )}
+                      </div>
+                      {a.notes && (
+                        <p className="text-slate-400 mt-1 truncate">{a.notes}</p>
                       )}
-                      {a.return_date && (
-                        <span>{t?.returned || 'Returned'}: {a.return_date}</span>
-                      )}
                     </div>
-                    {a.notes && (
-                      <p className="text-slate-400 mt-1 truncate">{a.notes}</p>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
