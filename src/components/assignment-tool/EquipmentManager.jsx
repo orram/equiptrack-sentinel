@@ -379,7 +379,31 @@ export default function EquipmentManager({ soldier, equipment = [], inventoryIte
         const equipmentId = item.assignment_type === 'inventory' ? item.object_name : item.serial_number;
         const todayDate = new Date().toISOString().split('T')[0];
 
-        // Check for duplicate assignment created on the same day for same equipment/soldier
+        if (item.assignment_type === 'inventory') {
+          const existingInventoryAssignment = freshAssignments.find(a =>
+            a.assignment_type === 'inventory' &&
+            a.equipment_id === equipmentId &&
+            a.soldier_id === soldier.soldier_id &&
+            a.status === 'active'
+          );
+
+          if (existingInventoryAssignment) {
+            await Assignment.update(existingInventoryAssignment.id, {
+              quantity: (existingInventoryAssignment.quantity || 1) + (item.quantity || 1),
+              notes: `Quantity increased via Assignment Tool on ${todayDate}`
+            });
+
+            const invItem = inventoryItems.find(i => i.object_name === item.object_name);
+            if (invItem) {
+              await InventoryItem.update(invItem.id, {
+                available_quantity: Math.max(0, (invItem.available_quantity || 0) - (item.quantity || 1))
+              });
+            }
+            continue;
+          }
+        }
+
+        // Check for duplicate serialized assignment created on the same day for same equipment/soldier
         const existingDuplicate = freshAssignments.find(a =>
           a.equipment_id === equipmentId &&
           a.soldier_id === soldier.soldier_id &&
