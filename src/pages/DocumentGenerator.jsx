@@ -100,26 +100,23 @@ export default function DocumentGenerator() {
     // Create array of [soldierId, soldierData, assignments] for sorting
     const groupsArray = Object.entries(filteredAssignmentGroups).map(([soldierId, assignments]) => {
       const soldier = allSoldiers.find(s => s.soldier_id === soldierId);
+      const assignmentTimes = assignments.map(a => new Date(a.assignment_date || 0).getTime());
       return {
         soldierId,
         soldier,
         assignments,
         platoon: soldier?.platoon || 'Unknown',
-        squad: soldier?.squad || 'Unknown'
+        squad: soldier?.squad || 'Unknown',
+        sortDate: filters.sortOrder === 'asc' ? Math.min(...assignmentTimes) : Math.max(...assignmentTimes)
       };
     });
 
-    // Sort by platoon, then squad, then soldier name
+    // Sort by assignment date first, then platoon, squad, and soldier name
     groupsArray.sort((a, b) => {
-      // First by platoon
-      if (a.platoon !== b.platoon) {
-        return a.platoon.localeCompare(b.platoon);
-      }
-      // Then by squad (numeric comparison)
-      if (a.squad !== b.squad) {
-        return a.squad.localeCompare(b.squad, undefined, { numeric: true });
-      }
-      // Finally by soldier name
+      const dateCompare = filters.sortOrder === 'asc' ? a.sortDate - b.sortDate : b.sortDate - a.sortDate;
+      if (dateCompare !== 0) return dateCompare;
+      if (a.platoon !== b.platoon) return a.platoon.localeCompare(b.platoon);
+      if (a.squad !== b.squad) return a.squad.localeCompare(b.squad, undefined, { numeric: true });
       return (a.soldier?.full_name || '').localeCompare(b.soldier?.full_name || '');
     });
 
@@ -130,7 +127,7 @@ export default function DocumentGenerator() {
     });
 
     return sortedGroups;
-  }, [filteredAssignmentGroups, allSoldiers]);
+  }, [filteredAssignmentGroups, allSoldiers, filters.sortOrder]);
 
   const handleToggleSelection = (groupKey) => {
     setSelectedGroupKeys(prev =>
@@ -173,20 +170,14 @@ export default function DocumentGenerator() {
       }
     });
 
-    // Sort documents by platoon, then squad, then date
+    // Sort documents by date first, then platoon and squad
     documentsToGenerate.sort((a, b) => {
-      // First by platoon
-      if (a.platoon !== b.platoon) {
-        return a.platoon.localeCompare(b.platoon);
-      }
-      // Then by squad (numeric comparison)
-      if (a.squad !== b.squad) {
-        return a.squad.localeCompare(b.squad, undefined, { numeric: true });
-      }
-      // Finally by date
-      return filters.sortOrder === 'asc'
+      const dateCompare = filters.sortOrder === 'asc'
         ? a.date.getTime() - b.date.getTime()
         : b.date.getTime() - a.date.getTime();
+      if (dateCompare !== 0) return dateCompare;
+      if (a.platoon !== b.platoon) return a.platoon.localeCompare(b.platoon);
+      return a.squad.localeCompare(b.squad, undefined, { numeric: true });
     });
 
     // Combine HTML in sorted order
