@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Equipment, Soldier, OldEquipment, Assignment } from "@/entities/all";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,7 @@ export default function EquipmentPage() {
   const [soldiers, setSoldiers] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [oldEquipment, setOldEquipment] = useState([]);
+  const [hasLoadedDeletedEquipment, setHasLoadedDeletedEquipment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDeleted, setIsLoadingDeleted] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,12 +100,13 @@ export default function EquipmentPage() {
   }, [loadData]);
 
   const loadDeletedEquipment = async () => {
-    if (oldEquipment.length > 0) return; // Don't load again if already loaded
+    if (hasLoadedDeletedEquipment) return;
     
     setIsLoadingDeleted(true);
     try {
       const deletedData = await OldEquipment.list("-deletion_date");
       setOldEquipment(deletedData);
+      setHasLoadedDeletedEquipment(true);
     } catch (error) {
       console.error("Error loading deleted equipment:", error);
     }
@@ -243,14 +246,41 @@ export default function EquipmentPage() {
     if (!equipmentToDelete) return;
 
     try {
+      const user = await base44.auth.me();
+      const archivedEquipment = await OldEquipment.create({
+        original_id: equipmentToDelete.id,
+        serial_number: equipmentToDelete.serial_number,
+        object_name: equipmentToDelete.object_name,
+        platoon: equipmentToDelete.platoon,
+        issued_soldier_name: equipmentToDelete.issued_soldier_name,
+        issued_soldier_id: equipmentToDelete.issued_soldier_id,
+        assignment_status: equipmentToDelete.assignment_status,
+        squad: equipmentToDelete.squad,
+        signature: equipmentToDelete.signature,
+        condition: equipmentToDelete.condition,
+        category: equipmentToDelete.category,
+        acquisition_date: equipmentToDelete.acquisition_date,
+        last_maintenance: equipmentToDelete.last_maintenance,
+        location_confirmed_date: equipmentToDelete.location_confirmed_date,
+        notes: equipmentToDelete.notes,
+        deletion_reason: deleteReason.trim() || "No reason provided",
+        deletion_date: new Date().toISOString().split('T')[0],
+        deleted_by: user?.email || user?.full_name || "Unknown user"
+      });
+
       await Equipment.delete(equipmentToDelete.id);
+
+      if (hasLoadedDeletedEquipment) {
+        setOldEquipment((prev) => [archivedEquipment, ...prev]);
+      }
+
       setShowDeleteDialog(false);
       setEquipmentToDelete(null);
       setDeleteReason("");
       loadData();
     } catch (error) {
       console.error("Error deleting equipment:", error);
-      alert("Failed to delete equipment. Please try again.");
+      alert("Failed to archive and delete equipment. Please try again.");
     }
   };
 
@@ -486,7 +516,7 @@ export default function EquipmentPage() {
                 Delete Equipment
               </DialogTitle>
               <DialogDescription>
-                This action cannot be undone. The equipment record will be permanently deleted.
+                This action will move the equipment record to the deleted archive, then remove it from the active list.
               </DialogDescription>
             </DialogHeader>
             {equipmentToDelete && (
@@ -499,9 +529,17 @@ export default function EquipmentPage() {
                     Status: <span className="font-medium">{equipmentToDelete.assignment_status}</span>
                   </p>
                 </div>
-                <p className="text-sm text-red-700">
-                  This will remove the equipment from the active list without creating an archive record.
-                </p>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">Deletion reason</label>
+                  <Input
+                    placeholder="Enter the reason for deletion"
+                    value={deleteReason}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                  />
+                  <p className="text-sm text-red-700">
+                    This will save the equipment details and reason in the deleted archive.
+                  </p>
+                </div>
               </div>
             )}
             <DialogFooter>
