@@ -3,10 +3,8 @@ import { Equipment, Soldier, Assignment } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { 
   CheckCircle,
-  Search,
   AlertCircle,
   RefreshCw 
 } from "lucide-react";
@@ -21,7 +19,6 @@ export default function Dashboard() {
   const [assignments, setAssignments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
 
   const loadData = useCallback(async (retryCount = 0) => {
@@ -214,16 +211,6 @@ export default function Dashboard() {
             <p className="text-slate-600 mt-1 text-sm md:text-base">Monitor and manage military equipment assignments</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:flex-none">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <Input
-                placeholder="Search equipment or soldiers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full md:w-80"
-                disabled={isLoading}
-              />
-            </div>
             <Button 
               onClick={() => loadData()} 
               disabled={isLoading}
@@ -268,7 +255,6 @@ export default function Dashboard() {
             <RecentActivity 
               assignments={assignments}
               isLoading={isLoading}
-              searchTerm={searchTerm}
             />
           </div>
 
