@@ -221,10 +221,14 @@ export default function ReturnTool() {
         // Handle supplanting items return
         if (assignment.signature_data?.supplanting_items && assignment.signature_data.supplanting_items.length > 0) {
           for (const supplantingItemName of assignment.signature_data.supplanting_items) {
+            const supplantingName = String(supplantingItemName || '').trim().toLowerCase();
+            const mainItemName = String(assignment.equipment_id || '').trim().toLowerCase();
+            if (!supplantingName) continue;
+
             // Skip if this is the same as the main inventory item (prevents double-counting)
-            if (assignment.assignment_type === 'inventory' && supplantingItemName.toLowerCase() === assignment.equipment_id.toLowerCase()) continue;
+            if (assignment.assignment_type === 'inventory' && supplantingName === mainItemName) continue;
             const inventoryMatch = inventoryItems.find(item =>
-              item.object_name.toLowerCase() === supplantingItemName.toLowerCase()
+              String(item.object_name || '').trim().toLowerCase() === supplantingName
             );
             if (inventoryMatch) {
               addInventoryDelta(inventoryMatch, 1);
@@ -234,7 +238,8 @@ export default function ReturnTool() {
 
         // Handle main item return
         if (assignment.assignment_type === 'inventory') {
-          const invItem = inventoryItems.find(i => i.object_name === assignment.equipment_id);
+          const assignmentItemName = String(assignment.equipment_id || '').trim().toLowerCase();
+          const invItem = inventoryItems.find(i => String(i.object_name || '').trim().toLowerCase() === assignmentItemName);
           if (invItem) {
             addInventoryDelta(invItem, returnQuantity);
           }
@@ -275,9 +280,9 @@ export default function ReturnTool() {
     } catch (error) {
       console.error("Error processing returns:", error);
       alert(t.errorProcessingReturns);
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setIsProcessing(false);
   };
 
   const getPlatoons = () => {
