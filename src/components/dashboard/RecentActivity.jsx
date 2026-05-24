@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +5,15 @@ import { format } from "date-fns";
 import { Clock, User, Package } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function RecentActivity({ assignments, isLoading, searchTerm }) {
+export default function RecentActivity({ assignments = [], isLoading, searchTerm = "" }) {
 
-  const filteredAssignments = assignments.filter(assignment =>
-    assignment.soldier_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    assignment.equipment_id?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const normalizedSearchTerm = searchTerm.toLowerCase();
+  const filteredAssignments = normalizedSearchTerm
+    ? assignments.filter(assignment =>
+        assignment.soldier_name?.toLowerCase().includes(normalizedSearchTerm) ||
+        assignment.equipment_id?.toLowerCase().includes(normalizedSearchTerm)
+      )
+    : assignments;
 
   if (isLoading) {
     return (
